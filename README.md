@@ -219,8 +219,7 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 ## 👨‍💻 Autor
 
 **Robert Dias Pereira**
-- Email: robert.dias.pereira@gmail.com
-- GitHub: [@robertdias](https://github.com/robertdias)
+- GitHub: [@robertdiaspereira](https://github.com/robertdiaspereira)
 - Website: https://zerotec.com.br
 
 ## 🙏 Agradecimentos
@@ -228,10 +227,6 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 - Django Community
 - Django REST Framework
 - Todos os contribuidores
-
-## 📞 Suporte
-
-Para suporte, envie um email para robert.dias.pereira@gmail.com ou abra uma issue no GitHub.
 
 ---
 
