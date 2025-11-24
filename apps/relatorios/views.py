@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+from rest_framework.decorators import action
 from django.db.models import Sum, Count, Avg, Q, F
 from django.utils import timezone
 from datetime import datetime, timedelta
@@ -21,6 +22,9 @@ from apps.financeiro.models import ContaPagar, ContaReceber, FluxoCaixa
 from apps.assistencia.models import OrdemServico
 from apps.erp.models import Cliente, Fornecedor, Produto
 from apps.crm.models import Oportunidade
+
+# Export utilities
+from .utils import PDFExporter, ExcelExporter
 
 
 class DashboardView(APIView):
@@ -115,7 +119,7 @@ class DashboardView(APIView):
             qtd_vendas=Count('id')
         ).order_by('-total')[:5]
         
-        return Response({
+        data = {
             'vendas': {
                 'total_mes': float(total_vendas_mes),
                 'quantidade_mes': qtd_vendas_mes,
@@ -146,7 +150,27 @@ class DashboardView(APIView):
             },
             'top_produtos': list(produtos_mais_vendidos),
             'top_clientes': list(top_clientes)
-        })
+        }
+        
+        # Check if export format is requested
+        export_format = request.query_params.get('export')
+        
+        if export_format == 'pdf':
+            pdf_buffer = PDFExporter.generate_dashboard_pdf(data)
+            response = HttpResponse(pdf_buffer, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="dashboard_zerotec_{hoje.strftime("%Y%m%d")}.pdf"'
+            return response
+        
+        elif export_format == 'excel':
+            excel_buffer = ExcelExporter.generate_dashboard_excel(data)
+            response = HttpResponse(
+                excel_buffer,
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = f'attachment; filename="dashboard_zerotec_{hoje.strftime("%Y%m%d")}.xlsx"'
+            return response
+        
+        return Response(data)
 
 
 class RelatorioVendasView(APIView):
