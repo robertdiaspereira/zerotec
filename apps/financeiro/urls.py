@@ -1,0 +1,20 @@
+"""
+URL patterns for Financeiro app
+"""
+
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
+
+app_name = 'financeiro'
+
+router = DefaultRouter()
+router.register(r'categorias', views.CategoriaFinanceiraViewSet, basename='categoria')
+router.register(r'contas-bancarias', views.ContaBancariaViewSet, basename='conta-bancaria')
+router.register(r'contas-pagar', views.ContaPagarViewSet, basename='conta-pagar')
+router.register(r'contas-receber', views.ContaReceberViewSet, basename='conta-receber')
+router.register(r'fluxo-caixa', views.FluxoCaixaViewSet, basename='fluxo-caixa')
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
