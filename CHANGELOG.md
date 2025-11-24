@@ -1,4 +1,4 @@
-# Changelog
+# Changelog - ZeroTec ERP
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
@@ -7,9 +7,9 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ## [1.0.0] - 2025-11-24
 
-### 🎉 Lançamento Inicial
+### 🎉 Lançamento Inicial - ZeroTec
 
-Sistema ERP completo com 8 módulos funcionais.
+Sistema ERP completo com 8 módulos funcionais. Zero complicação, total gestão.
 
 ### ✨ Adicionado
 

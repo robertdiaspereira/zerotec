@@ -1,6 +1,8 @@
-# Guia de Instalação Local - Windows
+# ZeroTec - Guia de Instalação Local (Windows)
 
-Este guia detalha o processo de instalação e configuração do sistema em ambiente de desenvolvimento local no Windows.
+**Zero Complicação, Total Gestão**
+
+Este guia detalha o processo de instalação e configuração do ZeroTec em ambiente de desenvolvimento local no Windows.
 
 ## 📋 Pré-requisitos
 
@@ -24,10 +26,10 @@ python --version
 
 ```powershell
 # Clone o repositório
-git clone https://github.com/seu-usuario/sistemaos.git
+git clone https://github.com/robertdias/zerotec.git
 
 # Entre na pasta do backend
-cd sistemaos\backend
+cd zerotec\backend
 ```
 
 ### 3. Criar Ambiente Virtual

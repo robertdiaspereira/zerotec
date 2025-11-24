@@ -1,10 +1,12 @@
-# Sistema ERP - Assistência Técnica
+# ZeroTec ERP
 
 [![Python](https://img.shields.io/badge/Python-3.11-blue.svg)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-4.2-green.svg)](https://www.djangoproject.com/)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Sistema completo de ERP com foco em Assistência Técnica, incluindo gestão de vendas, estoque, financeiro, CRM e muito mais.
+**Zero Complicação, Total Gestão**
+
+Sistema completo de ERP com foco em Assistência Técnica, incluindo gestão de vendas, estoque, financeiro, CRM e muito mais. Do zero ao sucesso com a plataforma mais completa do mercado.
 
 ## 🚀 Funcionalidades
 
@@ -42,8 +44,8 @@ Sistema completo de ERP com foco em Assistência Técnica, incluindo gestão de 
 
 1. **Clone o repositório**
 ```powershell
-git clone https://github.com/seu-usuario/sistemaos.git
-cd sistemaos/backend
+git clone https://github.com/robertdias/zerotec.git
+cd zerotec/backend
 ```
 
 2. **Crie e ative o ambiente virtual**
@@ -218,7 +220,8 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para ma
 
 **Robert Dias Pereira**
 - Email: robert.dias.pereira@gmail.com
-- GitHub: [@seu-usuario](https://github.com/seu-usuario)
+- GitHub: [@robertdias](https://github.com/robertdias)
+- Website: https://zerotec.com.br
 
 ## 🙏 Agradecimentos
 
