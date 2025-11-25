@@ -18,7 +18,6 @@ DATABASES = {
 # Desabilitar multi-tenancy para desenvolvimento local
 # (Será habilitado na VPS com PostgreSQL)
 INSTALLED_APPS = [app for app in INSTALLED_APPS if app != 'django_tenants']
-INSTALLED_APPS.append('apps.crm')  # Adicionar CRM
 MIDDLEWARE = [m for m in MIDDLEWARE if 'django_tenants' not in m]
 
 # Database Router - remover

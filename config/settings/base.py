@@ -52,6 +52,7 @@ TENANT_APPS = [
     'apps.vendas',
     'apps.assistencia',
     'apps.financeiro',
+    'apps.crm',
     'apps.relatorios',
     'apps.chatbot',
     'apps.integrations',
