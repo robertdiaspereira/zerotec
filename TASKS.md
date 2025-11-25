@@ -23,9 +23,10 @@
 - [x] **Histórico do Cliente**
   - [x] Endpoint unificado (Vendas + OS)
   - [x] Resumo financeiro do cliente
-- [ ] **PDV (Ponto de Venda)**
-  - [ ] Endpoint de venda rápida
-  - [ ] Busca por código de barras
+- [x] **PDV (Ponto de Venda)**
+  - [x] Endpoint de venda rápida
+  - [x] Busca por código de barras
+  - [x] Baixa automática de estoque e financeiro
 - [ ] **Sangria de Caixa**
   - [ ] Registro de sangria
   - [ ] Vínculo com categoria DRE

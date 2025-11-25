@@ -156,18 +156,29 @@ erp-php-existente/
 3. **Produto**: Implementado `movimentacoes` no `ProdutoViewSet`.
 4. **Resumos**: Adicionados cálculos de totais (quantidade e valor) nos endpoints.
 
+### 14:45 - Implementação do PDV (Ponto de Venda)
+**Análise**: Código PHP `Order.php` (funções `new_order_pdv`, `add_cart_item_pdv_barcode`) analisado.
+**Implementação**:
+1. **Endpoint `buscar_produto`**: Busca por código de barras ou código interno.
+2. **Endpoint `finalizar_venda`**:
+   - Recebe lista de itens e cliente.
+   - Cria Venda e ItensVenda.
+   - Baixa estoque automaticamente (`MovimentacaoEstoque`).
+   - Gera financeiro (`ContaReceber` quitada e `FluxoCaixa`).
+   - Registra movimento no PDV (`MovimentoPDV`).
+3. **Transação Atômica**: Garante que todas as operações ocorram ou nenhuma ocorra.
+
 ---
 
 ## 🎯 Próximos Passos (Continuar daqui)
 
 ### Imediato
-1. [ ] **PDV (Ponto de Venda)**: Criar endpoint para venda rápida com busca por código de barras.
-2. [ ] **Sangria de Caixa**: Implementar funcionalidade de sangria vinculada ao DRE.
+1. [ ] **Sangria de Caixa**: Implementar funcionalidade de sangria vinculada ao DRE.
+2. [ ] **Termos de Garantia**: Criar sistema de templates para termos.
 
 ### Curto Prazo
-1. [ ] **Termos de Garantia**: Criar sistema de templates para termos.
-2. [ ] **Etiquetas**: Implementar geração de etiquetas para entrega.
-3. [ ] **Testes**: Criar testes unitários para o DRE e Dashboard.
+1. [ ] **Etiquetas**: Implementar geração de etiquetas para entrega.
+2. [ ] **Testes**: Criar testes unitários para o DRE e Dashboard.
 
 ---
 
@@ -178,15 +189,15 @@ erp-php-existente/
 | Dashboard | ✅ Finalizado | Dashboard.php | ✅ Concluído |
 | Relatórios (DRE) | ✅ Finalizado | Report.php (dre) | ✅ Concluído |
 | ERP (Cadastros) | ✅ Finalizado | Customer, Product | ✅ Concluído |
+| Vendas (PDV) | ✅ Finalizado | Order (pdv) | ✅ Concluído |
 | Estoque | ✅ Implementado | Product (estoque) | ⏳ Pendente |
 | Compras | ✅ Implementado | Purchase | ⏳ Pendente |
-| Vendas | ✅ Implementado | Order | ⏳ Pendente |
 | Assistência (OS) | ✅ Implementado | Order_os, Termo | ⏳ Pendente |
 | Financeiro | ✅ Implementado | Movimentocaixa | ⏳ Pendente |
 
 ---
 
-**Última Atualização**: 2025-11-25 14:35
+**Última Atualização**: 2025-11-25 14:50
 **Desenvolvedor**: Robert
 **Assistente**: Antigravity AI
 **Repositório**: https://github.com/robertdiaspereira/zerotec
