@@ -20,9 +20,9 @@
   - [x] Vínculo com Contas a Pagar/Receber
   - [x] Endpoint DRE Mensal
   - [x] Endpoint DRE Anual
-- [ ] **Histórico do Cliente**
-  - [ ] Endpoint unificado (Vendas + OS)
-  - [ ] Resumo financeiro do cliente
+- [x] **Histórico do Cliente**
+  - [x] Endpoint unificado (Vendas + OS)
+  - [x] Resumo financeiro do cliente
 - [ ] **PDV (Ponto de Venda)**
   - [ ] Endpoint de venda rápida
   - [ ] Busca por código de barras

@@ -148,14 +148,21 @@ erp-php-existente/
 - Despesas: Vendas, Administrativas, Salários, Financeiras, Outras.
 - Provisões: IR/CSLL, Participações.
 
+### 14:30 - Implementação de Históricos (Cliente, Fornecedor, Produto)
+**Análise**: Código PHP `Customer.php` (função `cliente_hist`) analisado.
+**Implementação**:
+1. **Cliente**: Implementado `historico` (Vendas + OS) e `contas_receber` no `ClienteViewSet`.
+2. **Fornecedor**: Implementado `historico` (Compras) e `contas_pagar` no `FornecedorViewSet`.
+3. **Produto**: Implementado `movimentacoes` no `ProdutoViewSet`.
+4. **Resumos**: Adicionados cálculos de totais (quantidade e valor) nos endpoints.
+
 ---
 
 ## 🎯 Próximos Passos (Continuar daqui)
 
 ### Imediato
-1. [ ] **Histórico do Cliente**: Implementar endpoint que retorna histórico completo (Vendas + OS) de um cliente.
-2. [ ] **PDV (Ponto de Venda)**: Criar endpoint para venda rápida com busca por código de barras.
-3. [ ] **Sangria de Caixa**: Implementar funcionalidade de sangria vinculada ao DRE.
+1. [ ] **PDV (Ponto de Venda)**: Criar endpoint para venda rápida com busca por código de barras.
+2. [ ] **Sangria de Caixa**: Implementar funcionalidade de sangria vinculada ao DRE.
 
 ### Curto Prazo
 1. [ ] **Termos de Garantia**: Criar sistema de templates para termos.
@@ -170,7 +177,7 @@ erp-php-existente/
 |--------|----------------|---------------------|-----------------|
 | Dashboard | ✅ Finalizado | Dashboard.php | ✅ Concluído |
 | Relatórios (DRE) | ✅ Finalizado | Report.php (dre) | ✅ Concluído |
-| ERP (Cadastros) | ✅ Implementado | Customer, Product | ⏳ Pendente |
+| ERP (Cadastros) | ✅ Finalizado | Customer, Product | ✅ Concluído |
 | Estoque | ✅ Implementado | Product (estoque) | ⏳ Pendente |
 | Compras | ✅ Implementado | Purchase | ⏳ Pendente |
 | Vendas | ✅ Implementado | Order | ⏳ Pendente |
@@ -179,7 +186,7 @@ erp-php-existente/
 
 ---
 
-**Última Atualização**: 2025-11-25 14:05
+**Última Atualização**: 2025-11-25 14:35
 **Desenvolvedor**: Robert
 **Assistente**: Antigravity AI
 **Repositório**: https://github.com/robertdiaspereira/zerotec

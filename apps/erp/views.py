@@ -56,13 +56,33 @@ class ClienteViewSet(viewsets.ModelViewSet):
         """
         cliente = self.get_object()
         
-        # TODO: Implementar quando os models de Venda e OS estiverem prontos
+        # Imports locais para evitar ciclo
+        from apps.vendas.models import Venda
+        from apps.assistencia.models import OrdemServico
+        from apps.vendas.serializers import VendaListSerializer
+        from apps.assistencia.serializers import OrdemServicoListSerializer
+        
+        # Buscar vendas
+        vendas = Venda.objects.filter(cliente=cliente).order_by('-data_venda')
+        total_vendas = vendas.count()
+        valor_total_vendas = sum(v.valor_total for v in vendas)
+        
+        # Buscar OS
+        os_list = OrdemServico.objects.filter(cliente=cliente).order_by('-data_abertura')
+        total_os = os_list.count()
+        valor_total_os = sum(os.valor_total for os in os_list)
+        
         return Response({
             'cliente': ClienteSerializer(cliente).data,
-            'vendas': [],
-            'ordens_servico': [],
-            'total_vendas': cliente.total_vendas,
-            'total_os': cliente.total_os,
+            'resumo': {
+                'total_vendas_qtd': total_vendas,
+                'total_vendas_valor': valor_total_vendas,
+                'total_os_qtd': total_os,
+                'total_os_valor': valor_total_os,
+                'total_geral': valor_total_vendas + valor_total_os
+            },
+            'vendas': VendaListSerializer(vendas, many=True).data,
+            'ordens_servico': OrdemServicoListSerializer(os_list, many=True).data,
         })
     
     @action(detail=True, methods=['get'])
@@ -72,12 +92,35 @@ class ClienteViewSet(viewsets.ModelViewSet):
         """
         cliente = self.get_object()
         
-        # TODO: Implementar quando o model de ContaReceber estiver pronto
+        # Import local
+        from apps.financeiro.models import ContaReceber
+        from apps.financeiro.serializers import ContaReceberSerializer
+        from django.db.models import Sum
+        from django.utils import timezone
+        
+        contas = ContaReceber.objects.filter(cliente=cliente).order_by('data_vencimento')
+        
+        # Calcular totais
+        hoje = timezone.now().date()
+        
+        total_pendente = contas.filter(status='pendente').aggregate(
+            total=Sum('valor_original')
+        )['total'] or 0
+        
+        total_vencido = contas.filter(
+            status='pendente',
+            data_vencimento__lt=hoje
+        ).aggregate(
+            total=Sum('valor_original')
+        )['total'] or 0
+        
         return Response({
             'cliente': ClienteSerializer(cliente).data,
-            'contas': [],
-            'total_pendente': 0,
-            'total_vencido': 0,
+            'resumo': {
+                'total_pendente': total_pendente,
+                'total_vencido': total_vencido
+            },
+            'contas': ContaReceberSerializer(contas, many=True).data,
         })
 
 
@@ -104,11 +147,21 @@ class FornecedorViewSet(viewsets.ModelViewSet):
         """
         fornecedor = self.get_object()
         
-        # TODO: Implementar quando o model de PedidoCompra estiver pronto
+        # Import local
+        from apps.compras.models import PedidoCompra
+        from apps.compras.serializers import PedidoCompraListSerializer
+        
+        pedidos = PedidoCompra.objects.filter(fornecedor=fornecedor).order_by('-data_pedido')
+        total_compras = pedidos.count()
+        valor_total = sum(p.valor_total for p in pedidos)
+        
         return Response({
             'fornecedor': FornecedorSerializer(fornecedor).data,
-            'pedidos': [],
-            'total_compras': fornecedor.total_compras,
+            'resumo': {
+                'total_pedidos': total_compras,
+                'valor_total': valor_total
+            },
+            'pedidos': PedidoCompraListSerializer(pedidos, many=True).data,
         })
     
     @action(detail=True, methods=['get'])
@@ -118,12 +171,35 @@ class FornecedorViewSet(viewsets.ModelViewSet):
         """
         fornecedor = self.get_object()
         
-        # TODO: Implementar quando o model de ContaPagar estiver pronto
+        # Import local
+        from apps.financeiro.models import ContaPagar
+        from apps.financeiro.serializers import ContaPagarSerializer
+        from django.db.models import Sum
+        from django.utils import timezone
+        
+        contas = ContaPagar.objects.filter(fornecedor=fornecedor).order_by('data_vencimento')
+        
+        # Calcular totais
+        hoje = timezone.now().date()
+        
+        total_pendente = contas.filter(status='pendente').aggregate(
+            total=Sum('valor_original')
+        )['total'] or 0
+        
+        total_vencido = contas.filter(
+            status='pendente',
+            data_vencimento__lt=hoje
+        ).aggregate(
+            total=Sum('valor_original')
+        )['total'] or 0
+        
         return Response({
             'fornecedor': FornecedorSerializer(fornecedor).data,
-            'contas': [],
-            'total_pendente': 0,
-            'total_vencido': 0,
+            'resumo': {
+                'total_pendente': total_pendente,
+                'total_vencido': total_vencido
+            },
+            'contas': ContaPagarSerializer(contas, many=True).data,
         })
 
 
@@ -164,10 +240,15 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         """
         produto = self.get_object()
         
-        # TODO: Implementar quando o model de MovimentacaoEstoque estiver pronto
+        # Import local
+        from apps.estoque.models import MovimentacaoEstoque
+        from apps.estoque.serializers import MovimentacaoEstoqueSerializer
+        
+        movimentacoes = MovimentacaoEstoque.objects.filter(produto=produto).order_by('-data_movimentacao')
+        
         return Response({
             'produto': ProdutoSerializer(produto).data,
-            'movimentacoes': [],
+            'movimentacoes': MovimentacaoEstoqueSerializer(movimentacoes, many=True).data,
         })
     
     @action(detail=False, methods=['post'])
