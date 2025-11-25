@@ -30,126 +30,168 @@ from .utils import PDFExporter, ExcelExporter
 class DashboardView(APIView):
     """
     Dashboard geral com KPIs principais
+    Baseado no sistema PHP existente
     """
     # permission_classes = [IsAuthenticated]  # Desabilitado para teste local
     
     def get(self, request):
-        hoje = timezone.now().date()
-        inicio_mes = hoje.replace(day=1)
-        mes_passado = (inicio_mes - timedelta(days=1)).replace(day=1)
+        # Parâmetros
+        ano = int(request.query_params.get('ano', timezone.now().year))
+        mes = int(request.query_params.get('mes', timezone.now().month))
         
-        # Vendas
+        hoje = timezone.now().date()
+        inicio_mes = hoje.replace(day=1, month=mes, year=ano)
+        
+        # Calcular último dia do mês
+        if mes == 12:
+            fim_mes = inicio_mes.replace(year=ano+1, month=1, day=1) - timedelta(days=1)
+        else:
+            fim_mes = inicio_mes.replace(month=mes+1, day=1) - timedelta(days=1)
+        
+        mes_passado_inicio = (inicio_mes - timedelta(days=1)).replace(day=1)
+        mes_passado_fim = inicio_mes - timedelta(days=1)
+        
+        # ========== VENDAS DO MÊS ==========
         vendas_mes = Venda.objects.filter(
             data_venda__gte=inicio_mes,
+            data_venda__lte=fim_mes,
             status='finalizada'
         )
-        total_vendas_mes = vendas_mes.aggregate(total=Sum('valor_total'))['total'] or 0
+        
+        vendas_stats = vendas_mes.aggregate(
+            total=Sum('valor_total'),
+            descontos=Sum('desconto'),
+            frete=Sum('frete')
+        )
+        
+        total_vendas_mes = vendas_stats['total'] or 0
+        total_descontos = vendas_stats['descontos'] or 0
+        total_frete = vendas_stats['frete'] or 0
         qtd_vendas_mes = vendas_mes.count()
         
+        # Vendas mês passado para comparação
         vendas_mes_passado = Venda.objects.filter(
-            data_venda__gte=mes_passado,
-            data_venda__lt=inicio_mes,
+            data_venda__gte=mes_passado_inicio,
+            data_venda__lte=mes_passado_fim,
             status='finalizada'
         ).aggregate(total=Sum('valor_total'))['total'] or 0
         
-        # Compras
-        compras_mes = PedidoCompra.objects.filter(
-            data_pedido__gte=inicio_mes
-        ).aggregate(total=Sum('valor_total'))['total'] or 0
-        
-        # Financeiro
-        contas_receber_vencidas = ContaReceber.objects.filter(
-            status='pendente',
-            data_vencimento__lt=hoje
-        ).aggregate(total=Sum('valor_original'))['total'] or 0
-        
-        contas_pagar_vencidas = ContaPagar.objects.filter(
-            status='pendente',
-            data_vencimento__lt=hoje
-        ).aggregate(total=Sum('valor_original'))['total'] or 0
-        
-        saldo_contas_receber = ContaReceber.objects.filter(
-            status='pendente'
-        ).aggregate(total=Sum('valor_original'))['total'] or 0
-        
-        saldo_contas_pagar = ContaPagar.objects.filter(
-            status='pendente'
-        ).aggregate(total=Sum('valor_original'))['total'] or 0
-        
-        # OS
-        os_abertas = OrdemServico.objects.filter(
-            status__in=['aberta', 'em_andamento']
-        ).count()
-        
+        # ========== ORDENS DE SERVIÇO DO MÊS ==========
         os_mes = OrdemServico.objects.filter(
-            data_abertura__gte=inicio_mes
-        ).count()
+            data_abertura__gte=inicio_mes,
+            data_abertura__lte=fim_mes
+        )
         
-        # CRM
-        oportunidades_abertas = Oportunidade.objects.exclude(
-            etapa__is_ganho=True
-        ).exclude(
-            etapa__is_perdido=True
-        ).count()
-        
-        valor_pipeline = Oportunidade.objects.exclude(
-            etapa__is_ganho=True
-        ).exclude(
-            etapa__is_perdido=True
-        ).aggregate(total=Sum('valor_estimado'))['total'] or 0
-        
-        # Produtos mais vendidos (top 5)
-        produtos_mais_vendidos = ItemVenda.objects.filter(
-            venda__data_venda__gte=inicio_mes,
-            venda__status='finalizada'
-        ).values(
-            'produto__nome'
-        ).annotate(
-            quantidade=Sum('quantidade')
-        ).order_by('-quantidade')[:5]
-        
-        # Clientes que mais compraram (top 5)
-        top_clientes = Venda.objects.filter(
-            data_venda__gte=inicio_mes,
-            status='finalizada'
-        ).values(
-            'cliente__nome_razao_social'
-        ).annotate(
+        os_stats = os_mes.aggregate(
             total=Sum('valor_total'),
-            qtd_vendas=Count('id')
-        ).order_by('-total')[:5]
+            servicos=Sum('valor_servicos'),
+            produtos=Sum('valor_produtos'),
+            custos=Sum('custo_total')
+        )
         
+        total_os = os_stats['total'] or 0
+        valor_servicos = os_stats['servicos'] or 0
+        valor_produtos_os = os_stats['produtos'] or 0
+        custos_os = os_stats['custos'] or 0
+        qtd_os_mes = os_mes.count()
+        
+        # ========== CONTAS A RECEBER ==========
+        # Hoje
+        contas_receber_hoje = ContaReceber.objects.filter(
+            status='pendente',
+            data_vencimento=hoje
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # Este mês
+        contas_receber_mes = ContaReceber.objects.filter(
+            status='pendente',
+            data_vencimento__gte=hoje,
+            data_vencimento__lte=fim_mes
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # Atrasadas
+        contas_receber_atrasadas = ContaReceber.objects.filter(
+            status='pendente',
+            data_vencimento__lt=hoje
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # ========== CONTAS A PAGAR ==========
+        # Hoje
+        contas_pagar_hoje = ContaPagar.objects.filter(
+            status='pendente',
+            data_vencimento=hoje
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # Este mês
+        contas_pagar_mes = ContaPagar.objects.filter(
+            status='pendente',
+            data_vencimento__gte=hoje,
+            data_vencimento__lte=fim_mes
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # Atrasadas
+        contas_pagar_atrasadas = ContaPagar.objects.filter(
+            status='pendente',
+            data_vencimento__lt=hoje
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # ========== DESPESAS DO MÊS ==========
+        despesas_mes = ContaPagar.objects.filter(
+            data_pagamento__gte=inicio_mes,
+            data_pagamento__lte=fim_mes,
+            status='pago'
+        ).aggregate(total=Sum('valor_original'))['total'] or 0
+        
+        # ========== GRÁFICOS ANUAIS ==========
+        graficos_anuais = self._get_graficos_anuais(ano)
+        
+        # ========== ÚLTIMAS MOVIMENTAÇÕES ==========
+        ultimas_movimentacoes = self._get_ultimas_movimentacoes()
+        
+        # ========== RESPOSTA ==========
         data = {
+            'periodo': {
+                'mes': mes,
+                'ano': ano,
+                'data_inicio': inicio_mes.isoformat(),
+                'data_fim': fim_mes.isoformat()
+            },
             'vendas': {
-                'total_mes': float(total_vendas_mes),
-                'quantidade_mes': qtd_vendas_mes,
-                'total_mes_passado': float(vendas_mes_passado),
+                'total': float(total_vendas_mes),
+                'quantidade': qtd_vendas_mes,
+                'descontos': float(total_descontos),
+                'frete': float(total_frete),
+                'ticket_medio': float(total_vendas_mes / qtd_vendas_mes) if qtd_vendas_mes > 0 else 0,
                 'crescimento_percentual': (
                     ((total_vendas_mes - vendas_mes_passado) / vendas_mes_passado * 100)
                     if vendas_mes_passado > 0 else 0
-                ),
-                'ticket_medio': float(total_vendas_mes / qtd_vendas_mes) if qtd_vendas_mes > 0 else 0
-            },
-            'compras': {
-                'total_mes': float(compras_mes)
-            },
-            'financeiro': {
-                'contas_receber_vencidas': float(contas_receber_vencidas),
-                'contas_pagar_vencidas': float(contas_pagar_vencidas),
-                'saldo_contas_receber': float(saldo_contas_receber),
-                'saldo_contas_pagar': float(saldo_contas_pagar),
-                'saldo_liquido': float(saldo_contas_receber - saldo_contas_pagar)
+                )
             },
             'os': {
-                'abertas': os_abertas,
-                'mes': os_mes
+                'total': float(total_os),
+                'quantidade': qtd_os_mes,
+                'servicos': float(valor_servicos),
+                'produtos': float(valor_produtos_os),
+                'custos': float(custos_os),
+                'lucro': float(total_os - custos_os)
             },
-            'crm': {
-                'oportunidades_abertas': oportunidades_abertas,
-                'valor_pipeline': float(valor_pipeline)
+            'contas_receber': {
+                'hoje': float(contas_receber_hoje),
+                'mes': float(contas_receber_mes),
+                'atrasadas': float(contas_receber_atrasadas),
+                'total_pendente': float(contas_receber_hoje + contas_receber_mes + contas_receber_atrasadas)
             },
-            'top_produtos': list(produtos_mais_vendidos),
-            'top_clientes': list(top_clientes)
+            'contas_pagar': {
+                'hoje': float(contas_pagar_hoje),
+                'mes': float(contas_pagar_mes),
+                'atrasadas': float(contas_pagar_atrasadas),
+                'total_pendente': float(contas_pagar_hoje + contas_pagar_mes + contas_pagar_atrasadas)
+            },
+            'despesas': {
+                'total_mes': float(despesas_mes)
+            },
+            'graficos': graficos_anuais,
+            'ultimas_movimentacoes': ultimas_movimentacoes
         }
         
         # Check if export format is requested
@@ -171,6 +213,103 @@ class DashboardView(APIView):
             return response
         
         return Response(data)
+    
+    def _get_graficos_anuais(self, ano):
+        """
+        Gera dados para gráficos anuais (12 meses)
+        """
+        vendas_mensal = []
+        custos_vendas_mensal = []
+        os_servicos_mensal = []
+        os_produtos_mensal = []
+        os_custos_mensal = []
+        
+        for mes in range(1, 13):
+            # Calcular início e fim do mês
+            inicio = timezone.datetime(ano, mes, 1).date()
+            if mes == 12:
+                fim = timezone.datetime(ano + 1, 1, 1).date() - timedelta(days=1)
+            else:
+                fim = timezone.datetime(ano, mes + 1, 1).date() - timedelta(days=1)
+            
+            # Vendas
+            vendas = Venda.objects.filter(
+                data_venda__gte=inicio,
+                data_venda__lte=fim,
+                status='finalizada'
+            ).aggregate(
+                total=Sum('valor_total'),
+                custos=Sum('custo_total')
+            )
+            
+            vendas_mensal.append(float(vendas['total'] or 0))
+            custos_vendas_mensal.append(float(vendas['custos'] or 0))
+            
+            # OS
+            os = OrdemServico.objects.filter(
+                data_abertura__gte=inicio,
+                data_abertura__lte=fim
+            ).aggregate(
+                servicos=Sum('valor_servicos'),
+                produtos=Sum('valor_produtos'),
+                custos=Sum('custo_total')
+            )
+            
+            os_servicos_mensal.append(float(os['servicos'] or 0))
+            os_produtos_mensal.append(float(os['produtos'] or 0))
+            os_custos_mensal.append(float(os['custos'] or 0))
+        
+        return {
+            'vendas_anual': vendas_mensal,
+            'custos_vendas_anual': custos_vendas_mensal,
+            'os_servicos_anual': os_servicos_mensal,
+            'os_produtos_anual': os_produtos_mensal,
+            'os_custos_anual': os_custos_mensal,
+            'meses': ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        }
+    
+    def _get_ultimas_movimentacoes(self):
+        """
+        Retorna as últimas movimentações do sistema
+        """
+        # Últimas 10 vendas
+        ultimas_vendas = Venda.objects.select_related('cliente').filter(
+            status='finalizada'
+        ).values(
+            'id',
+            'numero',
+            'data_venda',
+            'cliente__nome_razao_social',
+            'valor_total',
+            'status'
+        ).order_by('-data_venda')[:10]
+        
+        # Últimas 10 OS
+        ultimas_os = OrdemServico.objects.select_related('cliente').values(
+            'id',
+            'numero',
+            'data_abertura',
+            'cliente__nome_razao_social',
+            'valor_total',
+            'status'
+        ).order_by('-data_abertura')[:10]
+        
+        # Últimas 10 compras
+        ultimas_compras = PedidoCompra.objects.select_related('fornecedor').values(
+            'id',
+            'numero',
+            'data_pedido',
+            'fornecedor__razao_social',
+            'valor_total',
+            'status'
+        ).order_by('-data_pedido')[:10]
+        
+        return {
+            'vendas': list(ultimas_vendas),
+            'os': list(ultimas_os),
+            'compras': list(ultimas_compras)
+        }
+
 
 
 class RelatorioVendasView(APIView):
