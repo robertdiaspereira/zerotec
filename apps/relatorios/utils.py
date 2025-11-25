@@ -76,7 +76,7 @@ class PDFExporter:
             textColor=colors.HexColor('#FF6B35'),
             spaceAfter=12
         )
-        elements.append(Paragraph("📊 Vendas do Mês", section_style))
+        elements.append(Paragraph("VENDAS DO MES", section_style))
         
         vendas_data = [
             ['Métrica', 'Valor'],
@@ -86,14 +86,17 @@ class PDFExporter:
             ['Crescimento', f"{data['vendas']['crescimento_percentual']:.1f}%"]
         ]
         
-        vendas_table = Table(vendas_data, colWidths=[3*inch, 3*inch])
+        vendas_table = Table(vendas_data, colWidths=[4*inch, 2.5*inch])
         vendas_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0066CC')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
@@ -101,7 +104,7 @@ class PDFExporter:
         elements.append(Spacer(1, 20))
         
         # Financeiro Section
-        elements.append(Paragraph("💰 Situação Financeira", section_style))
+        elements.append(Paragraph("SITUACAO FINANCEIRA", section_style))
         
         financeiro_data = [
             ['Métrica', 'Valor'],
@@ -112,14 +115,17 @@ class PDFExporter:
             ['Vencidas (Pagar)', f"R$ {data['financeiro']['contas_pagar_vencidas']:,.2f}"]
         ]
         
-        fin_table = Table(financeiro_data, colWidths=[3*inch, 3*inch])
+        fin_table = Table(financeiro_data, colWidths=[4*inch, 2.5*inch])
         fin_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0066CC')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
@@ -127,7 +133,7 @@ class PDFExporter:
         elements.append(Spacer(1, 20))
         
         # CRM Section
-        elements.append(Paragraph("🎯 CRM - Pipeline de Vendas", section_style))
+        elements.append(Paragraph("CRM - PIPELINE DE VENDAS", section_style))
         
         crm_data = [
             ['Métrica', 'Valor'],
@@ -135,21 +141,25 @@ class PDFExporter:
             ['Valor do Pipeline', f"R$ {data['crm']['valor_pipeline']:,.2f}"]
         ]
         
-        crm_table = Table(crm_data, colWidths=[3*inch, 3*inch])
+        crm_table = Table(crm_data, colWidths=[4*inch, 2.5*inch])
         crm_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0066CC')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, 0), 12),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
             ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
             ('GRID', (0, 0), (-1, -1), 1, colors.black)
         ]))
         elements.append(crm_table)
         
-        # Build PDF
-        doc.build(elements, onFirstPage=PDFExporter.create_header, onLaterPages=PDFExporter.create_header)
+        
+        # Build PDF with footer
+        doc.build(elements, onFirstPage=PDFExporter.create_footer, onLaterPages=PDFExporter.create_footer)
         
         buffer.seek(0)
         return buffer
