@@ -10,7 +10,27 @@
 
 ## 🎯 Tarefas Pendentes (Antes do Deploy VPS)
 
-### 1. ✅ Testes de API (PRIORIDADE ALTA)
+### 1. Funcionalidades do ERP PHP (Prioridade Alta)
+- [x] **Dashboard Principal**
+  - [x] KPIs do mês (Vendas, OS, Financeiro)
+  - [x] Gráficos anuais (Vendas, Custos, OS)
+  - [x] Últimas movimentações
+- [x] **Relatório DRE**
+  - [x] Model CategoriaDRE
+  - [x] Vínculo com Contas a Pagar/Receber
+  - [x] Endpoint DRE Mensal
+  - [x] Endpoint DRE Anual
+- [ ] **Histórico do Cliente**
+  - [ ] Endpoint unificado (Vendas + OS)
+  - [ ] Resumo financeiro do cliente
+- [ ] **PDV (Ponto de Venda)**
+  - [ ] Endpoint de venda rápida
+  - [ ] Busca por código de barras
+- [ ] **Sangria de Caixa**
+  - [ ] Registro de sangria
+  - [ ] Vínculo com categoria DRE
+
+### 2. ✅ Testes de API (PRIORIDADE ALTA)
 - [ ] Testar endpoints de autenticação (login/logout/refresh)
 - [ ] Testar CRUD de Clientes
 - [ ] Testar CRUD de Produtos
@@ -18,34 +38,6 @@
 - [ ] Testar módulo de Vendas
 - [ ] Testar módulo de Estoque
 - [ ] Testar módulo de Compras
-- [ ] Testar módulo de Financeiro
-- [ ] Testar módulo de CRM
-- [ ] Testar módulo de Assistência Técnica (OS)
-- [ ] Testar módulo de Relatórios
-- [ ] Verificar documentação Swagger (http://127.0.0.1:8000/api/schema/swagger-ui/)
-
-### 2. 📊 Exportação de Relatórios (PRIORIDADE ALTA)
-- [ ] Implementar exportação PDF
-  - [ ] Relatório de Vendas
-  - [ ] Relatório de Estoque
-  - [ ] Relatório Financeiro (DRE)
-  - [ ] Relatório de OS
-- [ ] Implementar exportação Excel
-  - [ ] Relatório de Vendas
-  - [ ] Relatório de Estoque
-  - [ ] Relatório Financeiro
-  - [ ] Relatório de OS
-
-### 3. 🧪 Testes Automatizados (PRIORIDADE MÉDIA)
-- [ ] Criar testes unitários para models
-- [ ] Criar testes de integração para APIs
-- [ ] Criar testes de serializers
-- [ ] Configurar pytest
-- [ ] Configurar coverage
-- [ ] Meta: 80%+ de cobertura
-
-### 4. 📧 Notificações por Email (PRIORIDADE MÉDIA)
-- [ ] Configurar templates de email
 - [ ] Notificação de estoque baixo
 - [ ] Notificação de vencimento de contas
 - [ ] Notificação de nova OS

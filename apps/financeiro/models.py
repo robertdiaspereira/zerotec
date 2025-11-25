@@ -90,6 +90,15 @@ class ContaPagar(BaseModel):
         verbose_name='Categoria',
         limit_choices_to={'tipo': 'despesa'}
     )
+    categoria_dre = models.ForeignKey(
+        'CategoriaDRE',
+        on_delete=models.SET_NULL,
+        related_name='contas_pagar',
+        verbose_name='Categoria DRE',
+        null=True,
+        blank=True,
+        help_text="Categoria para o relatório DRE"
+    )
     descricao = models.CharField('Descrição', max_length=200)
     
     # Valores
@@ -216,6 +225,15 @@ class ContaReceber(BaseModel):
         related_name='contas_receber',
         verbose_name='Categoria',
         limit_choices_to={'tipo': 'receita'}
+    )
+    categoria_dre = models.ForeignKey(
+        'CategoriaDRE',
+        on_delete=models.SET_NULL,
+        related_name='contas_receber',
+        verbose_name='Categoria DRE',
+        null=True,
+        blank=True,
+        help_text="Categoria para o relatório DRE"
     )
     descricao = models.CharField('Descrição', max_length=200)
     
