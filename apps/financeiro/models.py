@@ -374,3 +374,17 @@ class FluxoCaixa(models.Model):
     
     def __str__(self):
         return f'{self.data} - {self.get_tipo_display()} - R$ {self.valor}'
+
+
+# Import DRE models
+from .models_dre import CategoriaDRE
+
+__all__ = [
+    'CategoriaFinanceira',
+    'ContaBancaria',
+    'ContaPagar',
+    'ContaReceber',
+    'FluxoCaixa',
+    'CategoriaDRE',
+]
+
