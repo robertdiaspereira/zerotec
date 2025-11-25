@@ -112,7 +112,8 @@ if django.VERSION >= (3, 2):
 else:
     hide_celery_models()
 
-print("🚀 Usando configuração LOCAL (SQLite)")
-print("📁 Database: SQLite (db.sqlite3)")
-print("🔧 Multi-tenancy: DESABILITADO")
-print("⚡ Celery: DESABILITADO")
+print("Usando configuracao LOCAL (SQLite)")
+print("Database: SQLite (db.sqlite3)")
+print("Multi-tenancy: DESABILITADO")
+print("Celery: DESABILITADO")
+
