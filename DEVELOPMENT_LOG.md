@@ -168,17 +168,25 @@ erp-php-existente/
    - Registra movimento no PDV (`MovimentoPDV`).
 3. **Transação Atômica**: Garante que todas as operações ocorram ou nenhuma ocorra.
 
+### 15:00 - Implementação de Sangria/Suprimento com DRE
+**Análise**: Necessidade de vincular retiradas de caixa ao DRE.
+**Implementação**:
+1. **Model**: Adicionado campo `categoria_dre` em `MovimentoPDV`.
+2. **Migração**: Criada e aplicada migração `0002_movimentopdv_categoria_dre`.
+3. **View**: Atualizados métodos `sangria` e `suprimento` no `PDVViewSet` para aceitar `categoria_dre_id`.
+4. **Saldo**: Atualização automática do saldo do caixa (`valor_sangrias`, `valor_suprimentos`).
+
 ---
 
 ## 🎯 Próximos Passos (Continuar daqui)
 
 ### Imediato
-1. [ ] **Sangria de Caixa**: Implementar funcionalidade de sangria vinculada ao DRE.
-2. [ ] **Termos de Garantia**: Criar sistema de templates para termos.
+1. [ ] **Termos de Garantia**: Criar sistema de templates para termos.
+2. [ ] **Etiquetas**: Implementar geração de etiquetas para entrega.
 
 ### Curto Prazo
-1. [ ] **Etiquetas**: Implementar geração de etiquetas para entrega.
-2. [ ] **Testes**: Criar testes unitários para o DRE e Dashboard.
+1. [ ] **Testes**: Criar testes unitários para o DRE e Dashboard.
+2. [ ] **Deploy**: Preparar ambiente de produção (Docker/VPS).
 
 ---
 
@@ -197,7 +205,7 @@ erp-php-existente/
 
 ---
 
-**Última Atualização**: 2025-11-25 14:50
+**Última Atualização**: 2025-11-25 15:05
 **Desenvolvedor**: Robert
 **Assistente**: Antigravity AI
 **Repositório**: https://github.com/robertdiaspereira/zerotec

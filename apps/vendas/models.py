@@ -324,6 +324,15 @@ class MovimentoPDV(models.Model):
     )
     descricao = models.CharField('Descrição', max_length=200)
     data = models.DateTimeField('Data', auto_now_add=True)
+    categoria_dre = models.ForeignKey(
+        'financeiro.CategoriaDRE',
+        on_delete=models.SET_NULL,
+        related_name='movimentos_pdv',
+        verbose_name='Categoria DRE',
+        null=True,
+        blank=True,
+        help_text="Categoria para o relatório DRE"
+    )
     
     class Meta:
         verbose_name = 'Movimento do PDV'

@@ -19,7 +19,7 @@ from .serializers import (
 )
 from apps.erp.models import Produto, Cliente
 from apps.erp.serializers import ProdutoSerializer
-from apps.financeiro.models import ContaReceber, ContaBancaria, FluxoCaixa, CategoriaFinanceira
+from apps.financeiro.models import ContaReceber, ContaBancaria, FluxoCaixa, CategoriaFinanceira, CategoriaDRE
 from apps.estoque.models import MovimentacaoEstoque
 
 
@@ -198,13 +198,23 @@ class PDVViewSet(viewsets.ModelViewSet):
         
         valor = request.data.get('valor', 0)
         descricao = request.data.get('descricao', 'Sangria')
+        categoria_dre_id = request.data.get('categoria_dre_id')
+        
+        categoria_dre = None
+        if categoria_dre_id:
+            categoria_dre = get_object_or_404(CategoriaDRE, pk=categoria_dre_id)
         
         movimento = MovimentoPDV.objects.create(
             pdv=pdv,
             tipo='sangria',
             valor=valor,
-            descricao=descricao
+            descricao=descricao,
+            categoria_dre=categoria_dre
         )
+        
+        # Atualizar saldo do PDV
+        pdv.valor_sangrias += float(valor)
+        pdv.save()
         
         return Response(MovimentoPDVSerializer(movimento).data, status=status.HTTP_201_CREATED)
     
@@ -220,13 +230,23 @@ class PDVViewSet(viewsets.ModelViewSet):
         
         valor = request.data.get('valor', 0)
         descricao = request.data.get('descricao', 'Suprimento')
+        categoria_dre_id = request.data.get('categoria_dre_id')
+        
+        categoria_dre = None
+        if categoria_dre_id:
+            categoria_dre = get_object_or_404(CategoriaDRE, pk=categoria_dre_id)
         
         movimento = MovimentoPDV.objects.create(
             pdv=pdv,
             tipo='suprimento',
             valor=valor,
-            descricao=descricao
+            descricao=descricao,
+            categoria_dre=categoria_dre
         )
+        
+        # Atualizar saldo do PDV
+        pdv.valor_suprimentos += float(valor)
+        pdv.save()
         
         return Response(MovimentoPDVSerializer(movimento).data, status=status.HTTP_201_CREATED)
     

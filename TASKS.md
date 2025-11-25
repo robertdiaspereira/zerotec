@@ -27,9 +27,9 @@
   - [x] Endpoint de venda rápida
   - [x] Busca por código de barras
   - [x] Baixa automática de estoque e financeiro
-- [ ] **Sangria de Caixa**
-  - [ ] Registro de sangria
-  - [ ] Vínculo com categoria DRE
+- [x] **Sangria de Caixa**
+  - [x] Registro de sangria
+  - [x] Vínculo com categoria DRE
 
 ### 2. ✅ Testes de API (PRIORIDADE ALTA)
 - [ ] Testar endpoints de autenticação (login/logout/refresh)
