@@ -1,4 +1,4 @@
-# test_api.py
+# tests.py
 """Basic API tests for ZeroTec ERP.
 These tests use Django REST Framework's APIClient and pytest-django.
 Run with: `pytest` from the project root.

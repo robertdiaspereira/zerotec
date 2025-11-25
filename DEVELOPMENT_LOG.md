@@ -176,6 +176,11 @@ erp-php-existente/
 3. **View**: Atualizados métodos `sangria` e `suprimento` no `PDVViewSet` para aceitar `categoria_dre_id`.
 4. **Saldo**: Atualização automática do saldo do caixa (`valor_sangrias`, `valor_suprimentos`).
 
+### 15:30 - Criação e Ajuste de Testes Automatizados
+- Criado arquivo `tests.py` (renomeado de `test_api.py`) contendo testes de autenticação, CRUD de Cliente e Produto, busca de produto no PDV e finalização de venda.
+- Atualizado `TASKS.md` marcando a tarefa **Sangria de Caixa** como concluída.
+- Atualizado `DEVELOPMENT_LOG.md` com esta nova entrada.
+
 ---
 
 ## 🎯 Próximos Passos (Continuar daqui)
@@ -185,7 +190,7 @@ erp-php-existente/
 2. [ ] **Etiquetas**: Implementar geração de etiquetas para entrega.
 
 ### Curto Prazo
-1. [ ] **Testes**: Criar testes unitários para o DRE e Dashboard.
+1. [ ] **Testes**: Criar testes unitários adicionais para DRE e Dashboard.
 2. [ ] **Deploy**: Preparar ambiente de produção (Docker/VPS).
 
 ---
@@ -205,7 +210,7 @@ erp-php-existente/
 
 ---
 
-**Última Atualização**: 2025-11-25 15:05
+**Última Atualização**: 2025-11-25 15:30
 **Desenvolvedor**: Robert
 **Assistente**: Antigravity AI
 **Repositório**: https://github.com/robertdiaspereira/zerotec
