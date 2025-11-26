@@ -8,10 +8,15 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from .models import OrdemServico, PecaOS, OrcamentoOS, HistoricoOS
+from .models import (
+    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS,
+    ServicoTemplate, ChecklistItem, TermoGarantia, OSAnexo, CategoriaServico
+)
 from .serializers import (
     OrdemServicoSerializer, OrdemServicoListSerializer,
-    PecaOSSerializer, OrcamentoOSSerializer, HistoricoOSSerializer
+    PecaOSSerializer, OrcamentoOSSerializer, HistoricoOSSerializer,
+    ServicoTemplateSerializer, ChecklistItemSerializer,
+    TermoGarantiaSerializer, OSAnexoSerializer, CategoriaServicoSerializer
 )
 
 
@@ -271,3 +276,49 @@ class OrdemServicoViewSet(viewsets.ModelViewSet):
         
         serializer = OrdemServicoListSerializer(os_atrasadas, many=True)
         return Response(serializer.data)
+
+
+
+class CategoriaServicoViewSet(viewsets.ModelViewSet):
+    queryset = CategoriaServico.objects.all()
+    serializer_class = CategoriaServicoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['nome', 'descricao']
+    ordering_fields = ['nome']
+
+
+class ServicoTemplateViewSet(viewsets.ModelViewSet):
+    queryset = ServicoTemplate.objects.select_related('categoria').all()
+    serializer_class = ServicoTemplateSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['codigo', 'descricao']
+    ordering_fields = ['descricao', 'valor_padrao']
+    filterset_fields = ['categoria', 'ativo']
+
+
+class ChecklistItemViewSet(viewsets.ModelViewSet):
+    queryset = ChecklistItem.objects.all()
+    serializer_class = ChecklistItemSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['ordem', 'label']
+
+
+class TermoGarantiaViewSet(viewsets.ModelViewSet):
+    queryset = TermoGarantia.objects.all()
+    serializer_class = TermoGarantiaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['titulo', 'conteudo']
+    filterset_fields = ['tipo', 'ativo', 'padrao']
+
+
+class OSAnexoViewSet(viewsets.ModelViewSet):
+    queryset = OSAnexo.objects.all()
+    serializer_class = OSAnexoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['descricao']
+    filterset_fields = ['ordem_servico', 'tipo']

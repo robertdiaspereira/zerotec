@@ -19,6 +19,7 @@ import {
     Settings,
     ChevronDown,
     LogOut,
+    HelpCircle,
 } from "lucide-react";
 
 import {
@@ -64,8 +65,15 @@ const menuItems = [
         icon: Package,
         items: [
             { title: "Produtos", href: "/estoque/produtos" },
-            { title: "Movimentações", href: "/estoque/movimentacoes" },
-            { title: "Estoque Baixo", href: "/estoque/baixo" },
+            { title: "Ajuste de Estoque", href: "/estoque/movimentacoes" },
+        ],
+    },
+    {
+        title: "Serviços",
+        icon: Wrench,
+        items: [
+            { title: "Listagem", href: "/servicos" },
+            { title: "Novo Serviço", href: "/servicos/novo" },
         ],
     },
     {
@@ -82,15 +90,19 @@ const menuItems = [
         items: [
             { title: "Ordens de Serviço", href: "/os" },
             { title: "Nova OS", href: "/os/nova" },
+            { title: "Checklist", href: "/configuracoes/checklist" },
+            { title: "Cadastro Serviços", href: "/configuracoes/servicos" },
+            { title: "Termo de Garantia", href: "/configuracoes/termos-garantia" },
         ],
     },
     {
         title: "Financeiro",
         icon: DollarSign,
         items: [
-            { title: "Contas a Pagar", href: "/financeiro/pagar" },
-            { title: "Contas a Receber", href: "/financeiro/receber" },
-            { title: "Fluxo de Caixa", href: "/financeiro/fluxo" },
+            { title: "Contas a Pagar", href: "/financeiro/fluxo-caixa?tipo=pagar" },
+            { title: "Contas a Receber", href: "/financeiro/fluxo-caixa?tipo=receber" },
+            { title: "Fluxo de Caixa", href: "/financeiro/fluxo-caixa" },
+            { title: "Formas de Pagamento", href: "/configuracoes/formas-pagamento" },
         ],
     },
     {
@@ -101,6 +113,16 @@ const menuItems = [
             { title: "Vendas", href: "/relatorios/vendas" },
             { title: "Estoque", href: "/relatorios/estoque" },
         ],
+    },
+    {
+        title: "Configurações",
+        icon: Settings,
+        href: "/configuracoes",
+    },
+    {
+        title: "Ajuda",
+        icon: HelpCircle,
+        href: "/ajuda",
     },
 ];
 
@@ -155,7 +177,6 @@ export function AppSidebar() {
                                                     {item.items.map((subItem) => (
                                                         <SidebarMenuSubItem key={subItem.href}>
                                                             <SidebarMenuSubButton
-                                                                asChild
                                                                 isActive={pathname === subItem.href}
                                                             >
                                                                 <Link href={subItem.href}>{subItem.title}</Link>

@@ -105,7 +105,7 @@ class PedidoCompraViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['numero', 'fornecedor__razao_social', 'observacoes']
     ordering_fields = ['data_pedido', 'data_entrega_prevista', 'valor_total']
-    filterset_fields = ['status', 'fornecedor', 'comprador', 'forma_pagamento']
+    filterset_fields = ['status', 'fornecedor', 'comprador', 'forma_pagamento', 'itens__produto']
     
     def get_serializer_class(self):
         if self.action == 'list':

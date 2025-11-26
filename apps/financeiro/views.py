@@ -9,12 +9,16 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db.models import Sum, Q
-from .models import CategoriaFinanceira, ContaBancaria, ContaPagar, ContaReceber, FluxoCaixa
+from .models import (
+    CategoriaFinanceira, ContaBancaria, ContaPagar, ContaReceber, FluxoCaixa,
+    FormaPagamento, Pagamento, Parcela
+)
 from .serializers import (
     CategoriaFinanceiraSerializer, ContaBancariaSerializer,
     ContaPagarSerializer, ContaPagarListSerializer,
     ContaReceberSerializer, ContaReceberListSerializer,
-    FluxoCaixaSerializer
+    FluxoCaixaSerializer, FormaPagamentoSerializer,
+    PagamentoSerializer, ParcelaSerializer
 )
 
 
@@ -220,3 +224,28 @@ class FluxoCaixaViewSet(viewsets.ModelViewSet):
         ).order_by('-total')
         
         return Response(list(por_categoria))
+
+
+class FormaPagamentoViewSet(viewsets.ModelViewSet):
+    queryset = FormaPagamento.objects.all()
+    serializer_class = FormaPagamentoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    search_fields = ['nome']
+    filterset_fields = ['tipo', 'ativo']
+
+
+class PagamentoViewSet(viewsets.ModelViewSet):
+    queryset = Pagamento.objects.all()
+    serializer_class = PagamentoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['ordem_servico']
+
+
+class ParcelaViewSet(viewsets.ModelViewSet):
+    queryset = Parcela.objects.all()
+    serializer_class = ParcelaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['pagamento', 'recebido']

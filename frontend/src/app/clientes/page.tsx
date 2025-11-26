@@ -39,7 +39,7 @@ export default function ClientesPage() {
         async function fetchClientes() {
             try {
                 setLoading(true);
-                const response = await api.getClientes();
+                const response = await api.getClientes() as any;
                 setClientes(response.results || response);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Erro ao carregar clientes");

@@ -3,7 +3,7 @@ Admin configuration for Vendas app
 """
 
 from django.contrib import admin
-from .models import Venda, ItemVenda, FormaPagamento, PDV, MovimentoPDV
+from .models import Venda, ItemVenda, RecebimentoVenda, PDV, MovimentoPDV
 
 
 class ItemVendaInline(admin.TabularInline):
@@ -12,9 +12,10 @@ class ItemVendaInline(admin.TabularInline):
     readonly_fields = ['preco_total']
 
 
-class FormaPagamentoInline(admin.TabularInline):
-    model = FormaPagamento
+class RecebimentoVendaInline(admin.TabularInline):
+    model = RecebimentoVenda
     extra = 1
+    readonly_fields = ['valor_taxa_total', 'valor_liquido', 'data_prevista_recebimento']
 
 
 @admin.register(Venda)
@@ -27,9 +28,9 @@ class VendaAdmin(admin.ModelAdmin):
     search_fields = ['numero', 'cliente__nome_razao_social', 'observacoes']
     readonly_fields = [
         'numero', 'data_venda', 'valor_produtos', 'valor_total',
-        'total_itens', 'total_pago', 'saldo_pendente', 'created_at', 'updated_at'
+        'total_itens', 'total_recebido', 'total_liquido_recebido', 'saldo_pendente', 'created_at', 'updated_at'
     ]
-    inlines = [ItemVendaInline, FormaPagamentoInline]
+    inlines = [ItemVendaInline, RecebimentoVendaInline]
     date_hierarchy = 'data_venda'
     
     fieldsets = (
@@ -41,8 +42,8 @@ class VendaAdmin(admin.ModelAdmin):
                 'valor_produtos', 'valor_desconto', 'valor_acrescimo', 'valor_total'
             )
         }),
-        ('Pagamento', {
-            'fields': ('total_pago', 'saldo_pendente')
+        ('Recebimento', {
+            'fields': ('total_recebido', 'total_liquido_recebido', 'saldo_pendente')
         }),
         ('Responsável', {
             'fields': ('vendedor',)

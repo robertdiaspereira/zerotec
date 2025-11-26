@@ -5,7 +5,7 @@ Views for Estoque models
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import models as django_models
@@ -30,7 +30,7 @@ class MovimentacaoEstoqueViewSet(viewsets.ModelViewSet):
     ViewSet for MovimentacaoEstoque
     """
     queryset = MovimentacaoEstoque.objects.select_related('produto', 'usuario').all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['produto__nome', 'produto__codigo_interno', 'documento_numero', 'motivo']
     ordering_fields = ['data_movimentacao', 'quantidade', 'valor_total']
@@ -48,7 +48,7 @@ class LoteViewSet(viewsets.ModelViewSet):
     """
     queryset = Lote.objects.select_related('produto', 'fornecedor').all()
     serializer_class = LoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['numero_lote', 'produto__nome', 'nota_fiscal']
     ordering_fields = ['data_validade', 'data_fabricacao', 'quantidade']
@@ -78,7 +78,7 @@ class InventarioViewSet(viewsets.ModelViewSet):
     ViewSet for Inventario
     """
     queryset = Inventario.objects.select_related('responsavel').prefetch_related('itens').all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = ['data_inicio', 'data_conclusao']
     filterset_fields = ['status', 'responsavel']
@@ -164,7 +164,7 @@ class EstoqueViewSet(viewsets.ViewSet):
     """
     ViewSet for stock operations (entrada, saida, ajuste, transferencia)
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     
     @action(detail=False, methods=['post'])
     def entrada(self, request):

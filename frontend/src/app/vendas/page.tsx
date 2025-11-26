@@ -26,7 +26,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Plus } from "lucide-react";
+import { Search, Filter, Download, Eye, Plus, MoreVertical, Edit, Copy, FileText, Trash } from "lucide-react";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import api from "@/lib/api";
 import Link from "next/link";
 
@@ -70,10 +77,12 @@ export default function VendasPage() {
         async function fetchVendas() {
             try {
                 setLoading(true);
-                const response = await api.getVendas();
+                const response = await api.getVendas() as any;
                 setVendas(response.results || response);
             } catch (err) {
-                setError(err instanceof Error ? err.message : "Erro ao carregar vendas");
+                setError(
+                    err instanceof Error ? err.message : "Erro ao carregar vendas"
+                );
             } finally {
                 setLoading(false);
             }
@@ -95,8 +104,8 @@ export default function VendasPage() {
         });
     }, [vendas, searchTerm, statusFilter]);
 
-    const totalVendas = filteredVendas.reduce((sum, v) => sum + v.valor_total, 0);
-    const totalDescontos = filteredVendas.reduce((sum, v) => sum + v.valor_desconto, 0);
+    const totalVendas = filteredVendas.reduce((sum, v) => sum + (Number(v.valor_total) || 0), 0);
+    const totalDescontos = filteredVendas.reduce((sum, v) => sum + (Number(v.valor_desconto) || 0), 0);
 
     if (loading) {
         return <VendasSkeleton />;
@@ -267,7 +276,7 @@ export default function VendasPage() {
                                             {new Intl.NumberFormat("pt-BR", {
                                                 style: "currency",
                                                 currency: "BRL",
-                                            }).format(venda.valor_desconto)}
+                                            }).format(Number(venda.valor_desconto) || 0)}
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
                                             {new Intl.NumberFormat("pt-BR", {
@@ -276,11 +285,45 @@ export default function VendasPage() {
                                             }).format(venda.valor_total)}
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            <Link href={`/vendas/${venda.id}`}>
-                                                <Button variant="ghost" size="sm">
-                                                    <Eye className="h-4 w-4" />
-                                                </Button>
-                                            </Link>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="sm">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/vendas/${venda.id}`}>
+                                                            <Eye className="mr-2 h-4 w-4" />
+                                                            Visualizar
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href={`/vendas/${venda.id}/editar`}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Editar
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem>
+                                                        <Copy className="mr-2 h-4 w-4" />
+                                                        Copiar
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem>
+                                                        <FileText className="mr-2 h-4 w-4" />
+                                                        Cupom Fiscal
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem>
+                                                        <Download className="mr-2 h-4 w-4" />
+                                                        Exportar PDF
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem variant="destructive">
+                                                        <Trash className="mr-2 h-4 w-4" />
+                                                        Excluir
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableCell>
                                     </TableRow>
                                 ))

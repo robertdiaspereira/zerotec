@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
 import type { Dashboard } from "@/types";
+import Link from "next/link";
 
 export default function DashboardPage() {
     const [data, setData] = React.useState<Dashboard | null>(null);
@@ -183,6 +184,99 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
+            {/* Financial Cards - Contas a Receber e Pagar */}
+            <div className="grid gap-4 md:grid-cols-2">
+                {/* Contas a Receber */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-semibold">A Receber</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=hoje"
+                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm text-muted-foreground">Hoje:</span>
+                            <span className="text-sm font-medium">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_receber?.hoje || 0)}
+                            </span>
+                        </Link>
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=restante_mes"
+                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm text-muted-foreground">Restante do mês:</span>
+                            <span className="text-sm font-medium">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_receber?.restante_mes || 0)}
+                            </span>
+                        </Link>
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=atrasadas"
+                            className="flex items-center justify-between border-t pt-3 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm font-semibold text-destructive">Em Atraso:</span>
+                            <span className="text-sm font-bold text-destructive">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_receber?.atrasadas || 0)}
+                            </span>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                {/* Contas a Pagar */}
+                <Card>
+                    <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-semibold">A Pagar</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=hoje"
+                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm text-muted-foreground">Hoje:</span>
+                            <span className="text-sm font-medium">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_pagar?.hoje || 0)}
+                            </span>
+                        </Link>
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=restante_mes"
+                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm text-muted-foreground">Restante do mês:</span>
+                            <span className="text-sm font-medium">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_pagar?.restante_mes || 0)}
+                            </span>
+                        </Link>
+                        <Link
+                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=atrasadas"
+                            className="flex items-center justify-between border-t pt-3 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                        >
+                            <span className="text-sm font-semibold text-destructive">Em Atraso:</span>
+                            <span className="text-sm font-bold text-destructive">
+                                {new Intl.NumberFormat("pt-BR", {
+                                    style: "currency",
+                                    currency: "BRL",
+                                }).format(kpis.contas_pagar?.atrasadas || 0)}
+                            </span>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
+
             {/* Charts and Recent Activity */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Charts */}
@@ -232,27 +326,46 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            {ultimas_movimentacoes.map((mov) => (
-                                <div
-                                    key={mov.id}
-                                    className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0"
-                                >
-                                    <div className="space-y-1">
-                                        <p className="text-sm font-medium leading-none">
-                                            {mov.descricao}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {new Date(mov.data).toLocaleDateString("pt-BR")}
-                                        </p>
-                                    </div>
-                                    <div className="text-sm font-medium">
-                                        {new Intl.NumberFormat("pt-BR", {
-                                            style: "currency",
-                                            currency: "BRL",
-                                        }).format(mov.valor)}
-                                    </div>
-                                </div>
-                            ))}
+                            {ultimas_movimentacoes.map((mov) => {
+                                // Generate link based on movement type
+                                const getMovementLink = () => {
+                                    switch (mov.tipo) {
+                                        case 'venda':
+                                            return `/vendas/${mov.id}`;
+                                        case 'os':
+                                            return `/os/${mov.id}`;
+                                        case 'pagamento':
+                                            return `/financeiro/contas-pagar`;
+                                        case 'recebimento':
+                                            return `/financeiro/contas-receber`;
+                                        default:
+                                            return '#';
+                                    }
+                                };
+
+                                return (
+                                    <Link
+                                        key={mov.id}
+                                        href={getMovementLink()}
+                                        className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
+                                    >
+                                        <div className="space-y-1">
+                                            <p className="text-sm font-medium leading-none">
+                                                {mov.descricao}
+                                            </p>
+                                            <p className="text-xs text-muted-foreground">
+                                                {new Date(mov.data).toLocaleDateString("pt-BR")}
+                                            </p>
+                                        </div>
+                                        <div className="text-sm font-medium">
+                                            {new Intl.NumberFormat("pt-BR", {
+                                                style: "currency",
+                                                currency: "BRL",
+                                            }).format(mov.valor)}
+                                        </div>
+                                    </Link>
+                                );
+                            })}
                         </div>
                     </CardContent>
                 </Card>

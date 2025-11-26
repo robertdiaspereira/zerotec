@@ -21,6 +21,18 @@ export interface DashboardKPIs {
         pagar: number;
         saldo: number;
     };
+    contas_receber: {
+        hoje: number;
+        restante_mes: number;
+        atrasadas: number;
+        total_mes: number;
+    };
+    contas_pagar: {
+        hoje: number;
+        restante_mes: number;
+        atrasadas: number;
+        total_mes: number;
+    };
 }
 
 export interface DashboardGraficos {

@@ -7,7 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Categoria, Cliente, Fornecedor, Produto
+from django.db import models
+from .models import Categoria, Cliente, Fornecedor, Produto, Servico
 from .serializers import (
     CategoriaSerializer,
     ClienteSerializer,
@@ -17,6 +18,8 @@ from .serializers import (
     ProdutoSerializer,
     ProdutoListSerializer,
     ProdutoImportSerializer,
+    ServicoSerializer,
+    ServicoListSerializer,
 )
 
 
@@ -270,3 +273,21 @@ class ProdutoViewSet(viewsets.ModelViewSet):
             'message': 'Importação em desenvolvimento',
             'file': file.name
         }, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+
+class ServicoViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Servico
+    """
+    queryset = Servico.objects.select_related('categoria').all()
+    permission_classes = [AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['nome', 'descricao', 'codigo_interno']
+    ordering_fields = ['nome', 'preco_venda', 'created_at']
+    filterset_fields = ['categoria', 'active']
+    
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ServicoListSerializer
+        return ServicoSerializer
+

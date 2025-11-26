@@ -3,7 +3,7 @@ Serializers for ERP models
 """
 
 from rest_framework import serializers
-from .models import Categoria, Cliente, Fornecedor, Produto
+from .models import Categoria, Cliente, Fornecedor, Produto, Servico
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -143,3 +143,32 @@ class ProdutoImportSerializer(serializers.Serializer):
             raise serializers.ValidationError('Apenas arquivos CSV ou Excel são permitidos')
         
         return value
+
+
+class ServicoSerializer(serializers.ModelSerializer):
+    """Serializer for Servico"""
+    
+    categoria_nome = serializers.CharField(source='categoria.nome', read_only=True)
+    
+    class Meta:
+        model = Servico
+        fields = [
+            'id', 'nome', 'descricao', 'categoria', 'categoria_nome',
+            'codigo_interno', 'preco_custo', 'preco_venda', 'margem_lucro',
+            'tempo_estimado', 'active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'margem_lucro', 'created_at', 'updated_at']
+
+
+class ServicoListSerializer(serializers.ModelSerializer):
+    """Simplified serializer for listing services"""
+    
+    categoria_nome = serializers.CharField(source='categoria.nome', read_only=True)
+    
+    class Meta:
+        model = Servico
+        fields = [
+            'id', 'codigo_interno', 'nome', 'categoria_nome',
+            'preco_venda', 'tempo_estimado', 'active'
+        ]
+

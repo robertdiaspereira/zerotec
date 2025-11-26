@@ -52,7 +52,7 @@ export default function EditarClientePage() {
         async function fetchCliente() {
             try {
                 setLoading(true);
-                const data = await api.getCliente(id);
+                const data = await api.getCliente(id) as any;
                 setFormData({
                     tipo: data.tipo,
                     nome_razao_social: data.nome_razao_social,

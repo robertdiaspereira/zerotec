@@ -176,11 +176,11 @@ class Fornecedor(BaseModel):
 
 class Produto(BaseModel):
     """
-    Produto ou Serviço
+    Produto (Mercadoria)
     """
     TIPO_CHOICES = [
         ('produto', 'Produto'),
-        ('servico', 'Serviço'),
+        ('servico', 'Serviço'),  # Deprecated, use Servico model instead
     ]
     
     UNIDADE_CHOICES = [
@@ -303,3 +303,68 @@ class Produto(BaseModel):
     def valor_estoque(self):
         """Valor total do estoque (custo)"""
         return self.estoque_atual * self.preco_custo
+
+
+class Servico(BaseModel):
+    """
+    Serviço prestado
+    """
+    nome = models.CharField('Nome', max_length=200)
+    descricao = models.TextField('Descrição', blank=True)
+    categoria = models.ForeignKey(
+        Categoria,
+        on_delete=models.PROTECT,
+        related_name='servicos',
+        verbose_name='Categoria',
+        null=True,
+        blank=True,
+        limit_choices_to={'tipo': 'servico'}
+    )
+    
+    # Códigos
+    codigo_interno = models.CharField('Código Interno', max_length=50, unique=True)
+    
+    # Preços
+    preco_custo = models.DecimalField(
+        'Custo Estimado',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    preco_venda = models.DecimalField(
+        'Preço de Venda',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    margem_lucro = models.DecimalField(
+        'Margem de Lucro (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(0)]
+    )
+    
+    # Tempo
+    tempo_estimado = models.IntegerField('Tempo Estimado (min)', default=0, help_text="Tempo médio em minutos")
+    
+    class Meta:
+        verbose_name = 'Serviço'
+        verbose_name_plural = 'Serviços'
+        ordering = ['nome']
+        indexes = [
+            models.Index(fields=['codigo_interno']),
+            models.Index(fields=['nome']),
+            models.Index(fields=['active']),
+        ]
+    
+    def __str__(self):
+        return f'{self.codigo_interno} - {self.nome}'
+    
+    def save(self, *args, **kwargs):
+        """Calcula margem de lucro automaticamente"""
+        if self.preco_custo > 0 and self.preco_venda > 0:
+            self.margem_lucro = ((self.preco_venda - self.preco_custo) / self.preco_custo) * 100
+        super().save(*args, **kwargs)

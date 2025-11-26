@@ -174,6 +174,18 @@ class DashboardView(APIView):
                     'receber': float(contas_receber_mes),
                     'pagar': float(contas_pagar_mes),
                     'saldo': float(contas_receber_mes - contas_pagar_mes)
+                },
+                'contas_receber': {
+                    'hoje': float(contas_receber_hoje),
+                    'restante_mes': float(contas_receber_mes - contas_receber_hoje),
+                    'atrasadas': float(contas_receber_atrasadas),
+                    'total_mes': float(contas_receber_mes)
+                },
+                'contas_pagar': {
+                    'hoje': float(contas_pagar_hoje),
+                    'restante_mes': float(contas_pagar_mes - contas_pagar_hoje),
+                    'atrasadas': float(contas_pagar_atrasadas),
+                    'total_mes': float(contas_pagar_mes)
                 }
             },
             'graficos': {

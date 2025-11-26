@@ -14,6 +14,9 @@ router.register(r'contas-bancarias', views.ContaBancariaViewSet, basename='conta
 router.register(r'contas-pagar', views.ContaPagarViewSet, basename='conta-pagar')
 router.register(r'contas-receber', views.ContaReceberViewSet, basename='conta-receber')
 router.register(r'fluxo-caixa', views.FluxoCaixaViewSet, basename='fluxo-caixa')
+router.register(r'formas-pagamento', views.FormaPagamentoViewSet)
+router.register(r'pagamentos', views.PagamentoViewSet)
+router.register(r'parcelas', views.ParcelaViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),

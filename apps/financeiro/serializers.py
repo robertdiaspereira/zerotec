@@ -3,7 +3,10 @@ Serializers for Financeiro models
 """
 
 from rest_framework import serializers
-from .models import CategoriaFinanceira, ContaBancaria, ContaPagar, ContaReceber, FluxoCaixa
+from .models import (
+    CategoriaFinanceira, ContaBancaria, ContaPagar, ContaReceber, FluxoCaixa,
+    FormaPagamento, Pagamento, Parcela
+)
 
 
 class CategoriaFinanceiraSerializer(serializers.ModelSerializer):
@@ -134,3 +137,29 @@ class FluxoCaixaSerializer(serializers.ModelSerializer):
             'conta_pagar', 'conta_receber', 'observacoes'
         ]
         read_only_fields = ['id']
+
+
+class FormaPagamentoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FormaPagamento
+        fields = '__all__'
+
+
+class ParcelaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Parcela
+        fields = '__all__'
+
+
+class PagamentoSerializer(serializers.ModelSerializer):
+    parcelas = ParcelaSerializer(many=True, read_only=True)
+    forma_pagamento_nome = serializers.CharField(source='forma_pagamento.nome', read_only=True)
+    
+    class Meta:
+        model = Pagamento
+        fields = [
+            'id', 'ordem_servico', 'forma_pagamento', 'forma_pagamento_nome',
+            'valor_original', 'taxa_maquina', 'valor_liquido',
+            'numero_parcelas', 'observacoes', 'created_at', 'parcelas'
+        ]
+        read_only_fields = ['id', 'created_at']

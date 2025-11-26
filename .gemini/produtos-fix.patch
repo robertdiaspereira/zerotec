@@ -1,0 +1,51 @@
+diff --git a/frontend/src/app/produtos/page.tsx b/frontend/src/app/produtos/page.tsx
+index original..fixed 100644
+--- a/frontend/src/app/produtos/page.tsx
++++ b/frontend/src/app/produtos/page.tsx
+@@ -26,8 +26,9 @@ import {
+     SelectTrigger,
+     SelectValue,
+ } from "@/components/ui/select";
+-import { Search, Plus, Package, AlertTriangle } from "lucide-react";
++import { Search, Plus, Package, AlertTriangle, Edit } from "lucide-react";
+ import api from "@/lib/api";
++import Link from "next/link";
+ 
+ interface Produto {
+     id: number;
+@@ -87,7 +88,7 @@ export default function ProdutosPage() {
+ 
+     const valorTotalEstoque = filteredProdutos
+         .filter((p) => p.tipo === "produto")
+-        .reduce((sum, p) => sum + p.preco_custo * p.estoque_atual, 0);
++        .reduce((sum, p) => sum + (Number(p.preco_custo) || 0) * (Number(p.estoque_atual) || 0), 0);
+ 
+     if (loading) {
+         return <ProdutosSkeleton />;
+@@ -115,11 +116,13 @@ export default function ProdutosPage() {
+                         Gerencie produtos e serviços
+                     </p>
+                 </div>
+-                <Button>
+-                    <Plus className="mr-2 h-4 w-4" />
+-                    Novo Produto
+-                </Button>
++                <Link href="/produtos/novo">
++                    <Button>
++                        <Plus className="mr-2 h-4 w-4" />
++                        Novo Produto
++                    </Button>
++                </Link>
+             </div>
+ 
+             {/* Stats Cards */}
+@@ -267,7 +270,7 @@ export default function ProdutosPage() {
+                                             <TableCell className="text-right">
+                                                 {new Intl.NumberFormat("pt-BR", {
+                                                     style: "currency",
+                                                     currency: "BRL",
+-                                                }).format(produto.preco_custo)}
++                                                }).format(Number(produto.preco_custo) || 0)}
+                                             </TableCell>
+                                             <TableCell className="text-right font-medium">
+                                                 {new Intl.NumberFormat("pt-BR", {

@@ -19,15 +19,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-import { Search, Plus, Package, AlertTriangle } from "lucide-react";
+import { Search, Plus, Package, AlertTriangle, History } from "lucide-react";
 import api from "@/lib/api";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Produto {
     id: number;
@@ -43,17 +38,18 @@ interface Produto {
 }
 
 export default function ProdutosPage() {
+    const router = useRouter();
     const [produtos, setProdutos] = React.useState<Produto[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const [searchTerm, setSearchTerm] = React.useState("");
-    const [tipoFilter, setTipoFilter] = React.useState<string>("all");
+    const [showLowStockOnly, setShowLowStockOnly] = React.useState(false);
 
     React.useEffect(() => {
         async function fetchProdutos() {
             try {
                 setLoading(true);
-                const response = await api.getProdutos();
+                const response = await api.getProdutos() as any;
                 setProdutos(response.results || response);
             } catch (err) {
                 setError(
@@ -69,24 +65,26 @@ export default function ProdutosPage() {
 
     const filteredProdutos = React.useMemo(() => {
         return produtos.filter((produto) => {
+            // Only show products, not services
+            if (produto.tipo !== 'produto') return false;
+
             const matchesSearch =
                 produto.codigo_interno.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 produto.nome.toLowerCase().includes(searchTerm.toLowerCase());
 
-            const matchesTipo =
-                tipoFilter === "all" || produto.tipo === tipoFilter;
+            const matchesLowStock = !showLowStockOnly || (produto.estoque_atual < produto.estoque_minimo);
 
-            return matchesSearch && matchesTipo;
+            return matchesSearch && matchesLowStock;
         });
-    }, [produtos, searchTerm, tipoFilter]);
+    }, [produtos, searchTerm, showLowStockOnly]);
 
-    const produtosEstoqueBaixo = filteredProdutos.filter(
+    const produtosEstoqueBaixo = produtos.filter(
         (p) => p.tipo === "produto" && p.estoque_atual < p.estoque_minimo
     );
 
     const valorTotalEstoque = filteredProdutos
         .filter((p) => p.tipo === "produto")
-        .reduce((sum, p) => sum + p.preco_custo * p.estoque_atual, 0);
+        .reduce((sum, p) => sum + (Number(p.preco_custo) || 0) * (Number(p.estoque_atual) || 0), 0);
 
     if (loading) {
         return <ProdutosSkeleton />;
@@ -115,15 +113,20 @@ export default function ProdutosPage() {
                         Gerencie produtos e serviços
                     </p>
                 </div>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Novo Produto
-                </Button>
+                <Link href="/produtos/novo">
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Novo Produto
+                    </Button>
+                </Link>
             </div>
 
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-4">
-                <Card>
+                <Card
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={() => setShowLowStockOnly(false)}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Total de Produtos
@@ -131,14 +134,17 @@ export default function ProdutosPage() {
                         <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{filteredProdutos.length}</div>
+                        <div className="text-2xl font-bold">{produtos.length}</div>
                         <p className="text-xs text-muted-foreground">
                             produtos cadastrados
                         </p>
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card
+                    className={`cursor-pointer hover:bg-muted/50 transition-colors ${showLowStockOnly ? 'border-yellow-500 bg-yellow-50/50' : ''}`}
+                    onClick={() => setShowLowStockOnly(!showLowStockOnly)}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
                             Estoque Baixo
@@ -150,7 +156,7 @@ export default function ProdutosPage() {
                             {produtosEstoqueBaixo.length}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                            produtos abaixo do mínimo
+                            itens abaixo do mínimo
                         </p>
                     </CardContent>
                 </Card>
@@ -193,16 +199,6 @@ export default function ProdutosPage() {
                                 />
                             </div>
                         </div>
-                        <Select value={tipoFilter} onValueChange={setTipoFilter}>
-                            <SelectTrigger className="w-full md:w-[200px]">
-                                <SelectValue placeholder="Tipo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">Todos os Tipos</SelectItem>
-                                <SelectItem value="produto">Produto</SelectItem>
-                                <SelectItem value="servico">Serviço</SelectItem>
-                            </SelectContent>
-                        </Select>
                     </div>
                 </CardContent>
             </Card>
@@ -218,17 +214,17 @@ export default function ProdutosPage() {
                             <TableRow>
                                 <TableHead>Código</TableHead>
                                 <TableHead>Nome</TableHead>
-                                <TableHead>Tipo</TableHead>
                                 <TableHead className="text-right">Estoque</TableHead>
                                 <TableHead className="text-right">Preço Custo</TableHead>
                                 <TableHead className="text-right">Preço Venda</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Ações</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {filteredProdutos.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} className="text-center">
+                                    <TableCell colSpan={8} className="text-center">
                                         Nenhum produto encontrado
                                     </TableCell>
                                 </TableRow>
@@ -239,16 +235,15 @@ export default function ProdutosPage() {
                                         produto.estoque_atual < produto.estoque_minimo;
 
                                     return (
-                                        <TableRow key={produto.id}>
+                                        <TableRow
+                                            key={produto.id}
+                                            className="cursor-pointer hover:bg-muted/50"
+                                            onClick={() => router.push(`/produtos/${produto.id}/editar`)}
+                                        >
                                             <TableCell className="font-medium">
                                                 {produto.codigo_interno}
                                             </TableCell>
                                             <TableCell>{produto.nome}</TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {produto.tipo === "produto" ? "Produto" : "Serviço"}
-                                                </Badge>
-                                            </TableCell>
                                             <TableCell className="text-right">
                                                 {produto.tipo === "produto" ? (
                                                     <span
@@ -267,7 +262,7 @@ export default function ProdutosPage() {
                                                 {new Intl.NumberFormat("pt-BR", {
                                                     style: "currency",
                                                     currency: "BRL",
-                                                }).format(produto.preco_custo)}
+                                                }).format(Number(produto.preco_custo) || 0)}
                                             </TableCell>
                                             <TableCell className="text-right font-medium">
                                                 {new Intl.NumberFormat("pt-BR", {
@@ -283,6 +278,19 @@ export default function ProdutosPage() {
                                                 >
                                                     {produto.active ? "Ativo" : "Inativo"}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.push(`/produtos/${produto.id}/historico`);
+                                                    }}
+                                                    title="Ver Histórico"
+                                                >
+                                                    <History className="h-4 w-4" />
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     );

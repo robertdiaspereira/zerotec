@@ -107,6 +107,13 @@ class OrdemServico(BaseModel):
     
     observacoes_internas = models.TextField('Observações Internas', blank=True)
     
+    # Novos campos
+    checklist = models.JSONField('Checklist', default=dict, blank=True)
+    obs_recebimento = models.TextField('Obs. Recebimento', blank=True)
+    laudo_tecnico = models.TextField('Laudo Técnico', blank=True)
+    valor_frete = models.DecimalField('Valor do Frete', max_digits=10, decimal_places=2, default=0)
+    protocolo_entrega = models.BooleanField('Protocolo de Entrega', default=False)
+    
     class Meta:
         verbose_name = 'Ordem de Serviço'
         verbose_name_plural = 'Ordens de Serviço'
@@ -164,6 +171,121 @@ class OrdemServico(BaseModel):
             delta = timezone.now() - self.data_abertura
             return delta.days
         return 0
+
+
+class CategoriaServico(models.Model):
+    """Categorias para organizar os serviços"""
+    nome = models.CharField(max_length=100, unique=True)
+    descricao = models.TextField(blank=True)
+    ativo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['nome']
+        verbose_name = 'Categoria de Serviço'
+        verbose_name_plural = 'Categorias de Serviços'
+    
+    def __str__(self):
+        return self.nome
+
+
+class ServicoTemplate(models.Model):
+    """Template de serviços pré-cadastrados"""
+    codigo = models.CharField(max_length=20, unique=True, editable=False)
+    descricao = models.CharField(max_length=200)
+    descricao_detalhada = models.TextField(blank=True)
+    valor_padrao = models.DecimalField(max_digits=10, decimal_places=2)
+    tempo_estimado = models.IntegerField(help_text="Tempo em minutos", null=True, blank=True)
+    categoria = models.ForeignKey(
+        CategoriaServico,
+        on_delete=models.PROTECT,
+        related_name='servicos',
+        verbose_name='Categoria',
+        null=True,
+        blank=True
+    )
+    ativo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['descricao']
+        verbose_name = 'Serviço'
+        verbose_name_plural = 'Serviços'
+    
+    def save(self, *args, **kwargs):
+        if not self.codigo:
+            # Gerar código automático SR_XXXX
+            last_servico = ServicoTemplate.objects.filter(
+                codigo__startswith='SR_'
+            ).order_by('-codigo').first()
+            
+            if last_servico and last_servico.codigo:
+                try:
+                    last_number = int(last_servico.codigo.split('_')[1])
+                    new_number = last_number + 1
+                except (IndexError, ValueError):
+                    new_number = 1
+            else:
+                new_number = 1
+            
+            self.codigo = f'SR_{new_number:04d}'
+        
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.codigo} - {self.descricao}"
+
+
+
+class ChecklistItem(models.Model):
+    """Itens customizáveis do checklist"""
+    label = models.CharField(max_length=100)
+    ordem = models.IntegerField(default=0)
+    ativo = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['ordem', 'label']
+    
+    def __str__(self):
+        return self.label
+
+
+class TermoGarantia(models.Model):
+    """Termos de garantia para produtos e serviços"""
+    TIPO_CHOICES = [
+        ('produto', 'Produto'),
+        ('servico', 'Serviço'),
+    ]
+    
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    titulo = models.CharField(max_length=200)
+    conteudo = models.TextField()
+    ativo = models.BooleanField(default=True)
+    padrao = models.BooleanField(default=False)  # Termo padrão
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Termo de Garantia'
+        verbose_name_plural = 'Termos de Garantia'
+    
+    def __str__(self):
+        return f"{self.get_tipo_display()} - {self.titulo}"
+
+
+class OSAnexo(models.Model):
+    ordem_servico = models.ForeignKey(OrdemServico, on_delete=models.CASCADE, related_name='anexos')
+    arquivo = models.FileField(upload_to='os_anexos/')
+    tipo = models.CharField(max_length=50)  # 'foto', 'documento'
+    descricao = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Anexo da OS'
+        verbose_name_plural = 'Anexos da OS'
 
 
 class PecaOS(models.Model):
@@ -298,3 +420,114 @@ class HistoricoOS(models.Model):
     
     def __str__(self):
         return f'{self.os.numero} - {self.acao} - {self.data.strftime("%d/%m/%Y %H:%M")}'
+
+
+class RecebimentoOS(models.Model):
+    """
+    Recebimento da Ordem de Serviço
+    Registra como o cliente pagou e as taxas aplicadas
+    """
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente'),
+        ('recebido', 'Recebido'),
+        ('cancelado', 'Cancelado'),
+    ]
+    
+    os = models.ForeignKey(
+        OrdemServico,
+        on_delete=models.CASCADE,
+        related_name='recebimentos',
+        verbose_name='Ordem de Serviço'
+    )
+    forma_recebimento = models.ForeignKey(
+        'financeiro.FormaRecebimento',
+        on_delete=models.PROTECT,
+        related_name='recebimentos_os',
+        verbose_name='Forma de Recebimento'
+    )
+    
+    # Valores
+    valor_bruto = models.DecimalField(
+        'Valor Bruto',
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)],
+        help_text='Valor antes das taxas'
+    )
+    taxa_percentual = models.DecimalField(
+        'Taxa Percentual (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Taxa aplicada pela operadora'
+    )
+    taxa_fixa = models.DecimalField(
+        'Taxa Fixa (R$)',
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+    valor_taxa_total = models.DecimalField(
+        'Valor Total de Taxas',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text='Soma de todas as taxas'
+    )
+    valor_liquido = models.DecimalField(
+        'Valor Líquido',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text='Valor que realmente entra no caixa'
+    )
+    
+    # Parcelamento
+    parcelas = models.IntegerField('Parcelas', default=1, validators=[MinValueValidator(1)])
+    
+    # Datas
+    data_vencimento = models.DateField('Data de Vencimento', null=True, blank=True)
+    data_recebimento = models.DateField('Data de Recebimento', null=True, blank=True)
+    data_prevista_recebimento = models.DateField(
+        'Data Prevista de Recebimento',
+        null=True,
+        blank=True,
+        help_text='Calculada com base nos dias de recebimento da forma'
+    )
+    
+    status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
+    observacoes = models.TextField('Observações', blank=True)
+    created_at = models.DateTimeField('Criado em', auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Recebimento da OS'
+        verbose_name_plural = 'Recebimentos das OS'
+        ordering = ['-data_vencimento']
+    
+    def __str__(self):
+        return f'OS {self.os.numero} - {self.forma_recebimento.nome} - R$ {self.valor_bruto} (Líquido: R$ {self.valor_liquido})'
+    
+    def save(self, *args, **kwargs):
+        """Calcula taxas e valor líquido automaticamente"""
+        if self.forma_recebimento:
+            # Calcular taxas usando o método do FormaRecebimento
+            taxa_total, valor_liquido = self.forma_recebimento.calcular_taxa(
+                self.valor_bruto,
+                self.parcelas
+            )
+            
+            self.valor_taxa_total = taxa_total
+            self.valor_liquido = valor_liquido
+            
+            # Armazenar as taxas aplicadas para histórico
+            self.taxa_percentual = self.forma_recebimento.taxa_percentual
+            self.taxa_fixa = self.forma_recebimento.taxa_fixa
+            
+            # Calcular data prevista de recebimento
+            if self.data_vencimento and self.forma_recebimento.dias_recebimento:
+                from datetime import timedelta
+                self.data_prevista_recebimento = self.data_vencimento + timedelta(
+                    days=self.forma_recebimento.dias_recebimento
+                )
+        
+        super().save(*args, **kwargs)

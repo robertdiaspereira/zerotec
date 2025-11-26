@@ -394,6 +394,134 @@ class FluxoCaixa(models.Model):
         return f'{self.data} - {self.get_tipo_display()} - R$ {self.valor}'
 
 
+class FormaRecebimento(models.Model):
+    """
+    Formas de Recebimento disponíveis
+    Define como o estabelecimento recebe pagamentos dos clientes,
+    incluindo taxas de máquinas de cartão e outras operadoras
+    """
+    nome = models.CharField('Nome', max_length=100, help_text='Ex: Débito Visa, Crédito Master, PIX')
+    tipo = models.CharField('Tipo', max_length=20, choices=[
+        ('dinheiro', 'Dinheiro'),
+        ('cartao_credito', 'Cartão de Crédito'),
+        ('cartao_debito', 'Cartão de Débito'),
+        ('pix', 'PIX'),
+        ('boleto', 'Boleto'),
+        ('transferencia', 'Transferência Bancária'),
+        ('cheque', 'Cheque'),
+    ])
+    
+    # Taxas cobradas pela operadora/máquina
+    taxa_percentual = models.DecimalField(
+        'Taxa Percentual (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Taxa percentual cobrada pela operadora (ex: 2.5 para 2,5%)'
+    )
+    taxa_fixa = models.DecimalField(
+        'Taxa Fixa (R$)',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text='Taxa fixa por transação'
+    )
+    
+    # Parcelamento
+    permite_parcelamento = models.BooleanField('Permite Parcelamento', default=False)
+    max_parcelas = models.IntegerField('Máximo de Parcelas', default=1)
+    
+    # Taxas por parcela (para cartão de crédito parcelado)
+    taxa_parcelado_2x = models.DecimalField('Taxa 2x (%)', max_digits=5, decimal_places=2, default=0, blank=True)
+    taxa_parcelado_3x = models.DecimalField('Taxa 3x (%)', max_digits=5, decimal_places=2, default=0, blank=True)
+    taxa_parcelado_4_6x = models.DecimalField('Taxa 4-6x (%)', max_digits=5, decimal_places=2, default=0, blank=True)
+    taxa_parcelado_7_12x = models.DecimalField('Taxa 7-12x (%)', max_digits=5, decimal_places=2, default=0, blank=True)
+    
+    # Prazo de recebimento
+    dias_recebimento = models.IntegerField(
+        'Dias para Recebimento',
+        default=0,
+        help_text='Quantos dias até o dinheiro cair na conta (ex: 30 dias)'
+    )
+    
+    # Operadora/Bandeira
+    operadora = models.CharField('Operadora/Bandeira', max_length=100, blank=True, help_text='Ex: Cielo, Stone, PagSeguro')
+    
+    ativo = models.BooleanField('Ativo', default=True)
+    created_at = models.DateTimeField('Criado em', auto_now_add=True)
+    updated_at = models.DateTimeField('Atualizado em', auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Forma de Recebimento'
+        verbose_name_plural = 'Formas de Recebimento'
+        ordering = ['tipo', 'nome']
+    
+    def __str__(self):
+        return f'{self.nome} ({self.get_tipo_display()})'
+    
+    def calcular_taxa(self, valor, parcelas=1):
+        """
+        Calcula a taxa total para um valor e número de parcelas
+        Retorna: (taxa_total, valor_liquido)
+        """
+        taxa_percentual = self.taxa_percentual
+        
+        # Aplicar taxa específica por parcela se for parcelado
+        if parcelas > 1 and self.permite_parcelamento:
+            if parcelas == 2:
+                taxa_percentual = self.taxa_parcelado_2x or self.taxa_percentual
+            elif parcelas == 3:
+                taxa_percentual = self.taxa_parcelado_3x or self.taxa_percentual
+            elif 4 <= parcelas <= 6:
+                taxa_percentual = self.taxa_parcelado_4_6x or self.taxa_percentual
+            elif 7 <= parcelas <= 12:
+                taxa_percentual = self.taxa_parcelado_7_12x or self.taxa_percentual
+        
+        from decimal import Decimal
+        taxa_total = (valor * taxa_percentual / Decimal('100')) + self.taxa_fixa
+        valor_liquido = valor - taxa_total
+        
+        return taxa_total, valor_liquido
+
+
+# Manter compatibilidade com código antigo
+FormaPagamento = FormaRecebimento
+
+
+class Pagamento(models.Model):
+    """Pagamento de uma OS"""
+    ordem_servico = models.ForeignKey('assistencia.OrdemServico', on_delete=models.CASCADE, related_name='pagamentos')
+    forma_pagamento = models.ForeignKey(FormaPagamento, on_delete=models.PROTECT)
+    valor_original = models.DecimalField(max_digits=10, decimal_places=2)
+    taxa_maquina = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    valor_liquido = models.DecimalField(max_digits=10, decimal_places=2)
+    numero_parcelas = models.IntegerField(default=1)
+    observacoes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        # Use getattr to avoid error if ordem_servico is not yet loaded or if using string reference
+        os_numero = getattr(self.ordem_servico, 'numero', 'N/A')
+        return f"Pagamento {self.id} - OS {os_numero}"
+
+
+class Parcela(models.Model):
+    """Parcelas de um pagamento"""
+    pagamento = models.ForeignKey(Pagamento, on_delete=models.CASCADE, related_name='parcelas')
+    numero_parcela = models.IntegerField()
+    valor = models.DecimalField(max_digits=10, decimal_places=2)
+    data_vencimento = models.DateField()
+    data_pagamento = models.DateField(null=True, blank=True)
+    recebido = models.BooleanField(default=False)
+    observacoes = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['numero_parcela']
+    
+    def __str__(self):
+        return f"Parcela {self.numero_parcela}/{self.pagamento.numero_parcelas}"
+
+
 # Import DRE models
 from .models_dre import CategoriaDRE
 
@@ -404,5 +532,8 @@ __all__ = [
     'ContaReceber',
     'FluxoCaixa',
     'CategoriaDRE',
+    'FormaPagamento',
+    'Pagamento',
+    'Parcela',
 ]
 

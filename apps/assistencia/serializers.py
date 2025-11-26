@@ -3,7 +3,40 @@ Serializers for Assistencia models
 """
 
 from rest_framework import serializers
-from .models import OrdemServico, PecaOS, OrcamentoOS, HistoricoOS
+from .models import (
+    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS,
+    ServicoTemplate, ChecklistItem, TermoGarantia, OSAnexo, CategoriaServico
+)
+
+
+class CategoriaServicoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoriaServico
+        fields = '__all__'
+
+
+class ServicoTemplateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServicoTemplate
+        fields = '__all__'
+
+
+class ChecklistItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChecklistItem
+        fields = '__all__'
+
+
+class TermoGarantiaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TermoGarantia
+        fields = '__all__'
+
+
+class OSAnexoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OSAnexo
+        fields = '__all__'
 
 
 class PecaOSSerializer(serializers.ModelSerializer):
@@ -56,6 +89,7 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
     pecas = PecaOSSerializer(many=True, read_only=True)
     orcamentos = OrcamentoOSSerializer(many=True, read_only=True)
     historico = HistoricoOSSerializer(many=True, read_only=True)
+    anexos = OSAnexoSerializer(many=True, read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome_razao_social', read_only=True)
     tecnico_nome = serializers.CharField(source='tecnico.get_full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -74,8 +108,10 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
             'status_display', 'prioridade', 'prioridade_display', 'valor_servico',
             'valor_pecas', 'valor_desconto', 'valor_total', 'garantia_dias',
             'data_fim_garantia', 'tecnico', 'tecnico_nome', 'observacoes_internas',
-            'pecas', 'orcamentos', 'historico', 'total_pecas', 'em_garantia',
-            'dias_aberta', 'active', 'created_at', 'updated_at'
+            'pecas', 'orcamentos', 'historico', 'anexos', 'total_pecas', 'em_garantia',
+            'dias_aberta', 'active', 'created_at', 'updated_at',
+            'checklist', 'obs_recebimento', 'laudo_tecnico', 'valor_frete',
+            'forma_pagamento', 'protocolo_entrega'
         ]
         read_only_fields = [
             'id', 'numero', 'data_abertura', 'data_conclusao', 'data_entrega',
@@ -85,7 +121,9 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
     
     def create(self, validated_data):
         """Add current user as tecnico"""
-        validated_data['tecnico'] = self.context['request'].user
+        # Only set tecnico if not provided
+        if 'tecnico' not in validated_data:
+            validated_data['tecnico'] = self.context['request'].user
         return super().create(validated_data)
 
 

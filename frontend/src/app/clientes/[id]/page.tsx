@@ -92,7 +92,7 @@ export default function ClienteDetailsPage() {
 
                 // Fetch vendas do cliente
                 try {
-                    const vendasResponse = await api.getVendas({ cliente_id: id });
+                    const vendasResponse = await api.getVendas({ cliente_id: id }) as any;
                     setVendas(vendasResponse.results || vendasResponse || []);
                 } catch (err) {
                     console.error("Erro ao carregar vendas:", err);
@@ -101,7 +101,7 @@ export default function ClienteDetailsPage() {
 
                 // Fetch OS do cliente
                 try {
-                    const osResponse = await api.getOrdemServico({ cliente_id: id });
+                    const osResponse = await api.getOrdemServico({ cliente_id: id }) as any;
                     setOrdens(osResponse.results || osResponse || []);
                 } catch (err) {
                     console.error("Erro ao carregar OS:", err);
@@ -142,8 +142,8 @@ export default function ClienteDetailsPage() {
         );
     }
 
-    const totalVendas = vendas.reduce((sum, v) => sum + v.valor_total, 0);
-    const totalOS = ordens.reduce((sum, o) => sum + o.valor_total, 0);
+    const totalVendas = vendas.reduce((sum, v) => sum + (Number(v.valor_total) || 0), 0);
+    const totalOS = ordens.reduce((sum, o) => sum + (Number(o.valor_total) || 0), 0);
 
     return (
         <div className="space-y-6">

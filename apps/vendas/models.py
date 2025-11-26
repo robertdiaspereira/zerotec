@@ -112,17 +112,23 @@ class Venda(BaseModel):
         return self.itens.count()
     
     @property
-    def total_pago(self):
-        """Total já pago"""
+    def total_recebido(self):
+        """Total já recebido"""
         return sum(
-            p.valor for p in self.pagamentos.filter(status='pago')
+            r.valor_bruto for r in self.recebimentos.filter(status='recebido')
+        )
+    
+    @property
+    def total_liquido_recebido(self):
+        """Total líquido recebido (descontando taxas)"""
+        return sum(
+            r.valor_liquido for r in self.recebimentos.filter(status='recebido')
         )
     
     @property
     def saldo_pendente(self):
-        """Saldo pendente de pagamento"""
-        # Garantir que ambos os operandos sejam Decimal
-        return Decimal(self.valor_total) - self.total_pago
+        """Saldo pendente de recebimento"""
+        return Decimal(self.valor_total) - self.total_recebido
 
 
 class ItemVenda(models.Model):
@@ -139,7 +145,17 @@ class ItemVenda(models.Model):
         Produto,
         on_delete=models.PROTECT,
         related_name='itens_venda',
-        verbose_name='Produto'
+        verbose_name='Produto',
+        null=True,
+        blank=True
+    )
+    servico = models.ForeignKey(
+        'erp.Servico',
+        on_delete=models.PROTECT,
+        related_name='itens_venda',
+        verbose_name='Serviço',
+        null=True,
+        blank=True
     )
     quantidade = models.DecimalField(
         'Quantidade',
@@ -175,59 +191,137 @@ class ItemVenda(models.Model):
     class Meta:
         verbose_name = 'Item da Venda'
         verbose_name_plural = 'Itens da Venda'
-        ordering = ['produto__nome']
+        ordering = ['produto__nome', 'servico__nome']
     
     def __str__(self):
-        return f'{self.produto.nome} - Qtd: {self.quantidade}'
+        nome = self.produto.nome if self.produto else (self.servico.nome if self.servico else 'Item desconhecido')
+        return f'{nome} - Qtd: {self.quantidade}'
     
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        if not self.produto and not self.servico:
+            raise ValidationError('Item deve ter um produto ou serviço vinculado.')
+        if self.produto and self.servico:
+            raise ValidationError('Item não pode ter produto e serviço simultaneamente.')
+            
     def save(self, *args, **kwargs):
         """Calcula preço total"""
         self.preco_total = (self.quantidade * self.preco_unitario) - self.desconto + self.acrescimo
         super().save(*args, **kwargs)
 
 
-class FormaPagamento(models.Model):
+class RecebimentoVenda(models.Model):
     """
-    Forma de Pagamento da Venda
+    Recebimento da Venda
+    Registra como o cliente pagou e as taxas aplicadas
     """
-    TIPO_CHOICES = [
-        ('dinheiro', 'Dinheiro'),
-        ('debito', 'Débito'),
-        ('credito', 'Crédito'),
-        ('pix', 'PIX'),
-        ('boleto', 'Boleto'),
-        ('cheque', 'Cheque'),
-    ]
-    
     STATUS_CHOICES = [
         ('pendente', 'Pendente'),
-        ('pago', 'Pago'),
+        ('recebido', 'Recebido'),
         ('cancelado', 'Cancelado'),
     ]
     
     venda = models.ForeignKey(
         Venda,
         on_delete=models.CASCADE,
-        related_name='pagamentos',
+        related_name='recebimentos',
         verbose_name='Venda'
     )
-    tipo = models.CharField('Tipo', max_length=20, choices=TIPO_CHOICES)
-    valor = models.DecimalField(
-        'Valor',
+    forma_recebimento = models.ForeignKey(
+        'financeiro.FormaRecebimento',
+        on_delete=models.PROTECT,
+        related_name='recebimentos_venda',
+        verbose_name='Forma de Recebimento'
+    )
+    
+    # Valores
+    valor_bruto = models.DecimalField(
+        'Valor Bruto',
         max_digits=10,
         decimal_places=2,
-        validators=[MinValueValidator(0)]
+        validators=[MinValueValidator(0)],
+        help_text='Valor antes das taxas'
     )
+    taxa_percentual = models.DecimalField(
+        'Taxa Percentual (%)',
+        max_digits=5,
+        decimal_places=2,
+        default=0,
+        help_text='Taxa aplicada pela operadora'
+    )
+    taxa_fixa = models.DecimalField(
+        'Taxa Fixa (R$)',
+        max_digits=10,
+        decimal_places=2,
+        default=0
+    )
+    valor_taxa_total = models.DecimalField(
+        'Valor Total de Taxas',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text='Soma de todas as taxas'
+    )
+    valor_liquido = models.DecimalField(
+        'Valor Líquido',
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        help_text='Valor que realmente entra no caixa'
+    )
+    
+    # Parcelamento
     parcelas = models.IntegerField('Parcelas', default=1, validators=[MinValueValidator(1)])
+    
+    # Datas
     data_vencimento = models.DateField('Data de Vencimento', null=True, blank=True)
+    data_recebimento = models.DateField('Data de Recebimento', null=True, blank=True)
+    data_prevista_recebimento = models.DateField(
+        'Data Prevista de Recebimento',
+        null=True,
+        blank=True,
+        help_text='Calculada com base nos dias de recebimento da forma'
+    )
+    
     status = models.CharField('Status', max_length=20, choices=STATUS_CHOICES, default='pendente')
+    observacoes = models.TextField('Observações', blank=True)
     
     class Meta:
-        verbose_name = 'Forma de Pagamento'
-        verbose_name_plural = 'Formas de Pagamento'
+        verbose_name = 'Recebimento da Venda'
+        verbose_name_plural = 'Recebimentos das Vendas'
+        ordering = ['-data_vencimento']
     
     def __str__(self):
-        return f'{self.get_tipo_display()} - R$ {self.valor}'
+        return f'{self.forma_recebimento.nome} - R$ {self.valor_bruto} (Líquido: R$ {self.valor_liquido})'
+    
+    def save(self, *args, **kwargs):
+        """Calcula taxas e valor líquido automaticamente"""
+        if self.forma_recebimento:
+            # Calcular taxas usando o método do FormaRecebimento
+            taxa_total, valor_liquido = self.forma_recebimento.calcular_taxa(
+                self.valor_bruto,
+                self.parcelas
+            )
+            
+            self.valor_taxa_total = taxa_total
+            self.valor_liquido = valor_liquido
+            
+            # Armazenar as taxas aplicadas para histórico
+            self.taxa_percentual = self.forma_recebimento.taxa_percentual
+            self.taxa_fixa = self.forma_recebimento.taxa_fixa
+            
+            # Calcular data prevista de recebimento
+            if self.data_vencimento and self.forma_recebimento.dias_recebimento:
+                from datetime import timedelta
+                self.data_prevista_recebimento = self.data_vencimento + timedelta(
+                    days=self.forma_recebimento.dias_recebimento
+                )
+        
+        super().save(*args, **kwargs)
+
+
+# Manter compatibilidade com código antigo
+FormaPagamento = RecebimentoVenda
 
 
 class PDV(BaseModel):

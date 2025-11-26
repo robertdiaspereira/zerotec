@@ -5,7 +5,7 @@ Views for Vendas models
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import transaction
@@ -28,11 +28,11 @@ class VendaViewSet(viewsets.ModelViewSet):
     ViewSet for Venda
     """
     queryset = Venda.objects.select_related('cliente', 'vendedor').prefetch_related('itens', 'pagamentos').all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['numero', 'cliente__nome_razao_social', 'observacoes']
     ordering_fields = ['data_venda', 'valor_total']
-    filterset_fields = ['tipo', 'status', 'cliente', 'vendedor']
+    filterset_fields = ['tipo', 'status', 'cliente', 'vendedor', 'itens__produto']
     
     def get_serializer_class(self):
         if self.action == 'list':
@@ -99,7 +99,7 @@ class PDVViewSet(viewsets.ModelViewSet):
     ViewSet for PDV
     """
     queryset = PDV.objects.select_related('operador').prefetch_related('movimentos').all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
     ordering_fields = ['data_abertura', 'data_fechamento']
     filterset_fields = ['status', 'operador', 'numero_caixa']
