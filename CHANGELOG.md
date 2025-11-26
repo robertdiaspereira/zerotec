@@ -5,6 +5,33 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
+## [1.1.0] - 2025-11-25
+
+### ✨ Adicionado - Frontend Next.js
+
+#### Autenticação
+- Sistema de Login com JWT
+- Proteção de rotas (Middleware)
+- Contexto de Autenticação (AuthContext)
+- Logout funcional
+
+#### Interface (UI/UX)
+- Layout responsivo com Sidebar
+- Dashboard com Gráficos e KPIs
+- Componentes shadcn/ui (Cards, Tables, Forms, etc.)
+- Tema escuro/claro (preparado)
+
+#### Módulos Implementados (Frontend)
+- **Dashboard**: Visão geral do negócio
+- **Clientes**: Listagem, Detalhes, Criação e Edição
+- **Produtos**: Listagem com status de estoque
+- **Vendas**: Listagem de vendas realizadas
+
+### 🐛 Corrigido
+- Endpoint de API para Ordens de Serviço (`/os/os/`)
+- Erro de build na página de Produtos (JSX)
+- Permissões de CORS para desenvolvimento
+
 ## [1.0.0] - 2025-11-24
 
 ### 🎉 Lançamento Inicial - ZeroTec

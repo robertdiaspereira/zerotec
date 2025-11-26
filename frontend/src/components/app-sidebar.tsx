@@ -1,0 +1,220 @@
+/**
+ * AppSidebar Component
+ * Main navigation sidebar for ZeroTec ERP
+ */
+
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+    LayoutDashboard,
+    ShoppingCart,
+    Package,
+    Users,
+    Wrench,
+    DollarSign,
+    FileText,
+    Settings,
+    ChevronDown,
+    LogOut,
+} from "lucide-react";
+
+import {
+    Sidebar,
+    SidebarContent,
+    SidebarFooter,
+    SidebarGroup,
+    SidebarGroupContent,
+    SidebarGroupLabel,
+    SidebarHeader,
+    SidebarMenu,
+    SidebarMenuButton,
+    SidebarMenuItem,
+    SidebarMenuSub,
+    SidebarMenuSubButton,
+    SidebarMenuSubItem,
+} from "@/components/ui/sidebar";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+const menuItems = [
+    {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        href: "/dashboard",
+    },
+    {
+        title: "Vendas",
+        icon: ShoppingCart,
+        items: [
+            { title: "Listagem", href: "/vendas" },
+            { title: "Nova Venda", href: "/vendas/nova" },
+            { title: "PDV", href: "/pdv" },
+        ],
+    },
+    {
+        title: "Estoque",
+        icon: Package,
+        items: [
+            { title: "Produtos", href: "/estoque/produtos" },
+            { title: "Movimentações", href: "/estoque/movimentacoes" },
+            { title: "Estoque Baixo", href: "/estoque/baixo" },
+        ],
+    },
+    {
+        title: "Clientes",
+        icon: Users,
+        items: [
+            { title: "Listagem", href: "/clientes" },
+            { title: "Novo Cliente", href: "/clientes/novo" },
+        ],
+    },
+    {
+        title: "Assistência Técnica",
+        icon: Wrench,
+        items: [
+            { title: "Ordens de Serviço", href: "/os" },
+            { title: "Nova OS", href: "/os/nova" },
+        ],
+    },
+    {
+        title: "Financeiro",
+        icon: DollarSign,
+        items: [
+            { title: "Contas a Pagar", href: "/financeiro/pagar" },
+            { title: "Contas a Receber", href: "/financeiro/receber" },
+            { title: "Fluxo de Caixa", href: "/financeiro/fluxo" },
+        ],
+    },
+    {
+        title: "Relatórios",
+        icon: FileText,
+        items: [
+            { title: "DRE", href: "/relatorios/dre" },
+            { title: "Vendas", href: "/relatorios/vendas" },
+            { title: "Estoque", href: "/relatorios/estoque" },
+        ],
+    },
+];
+
+export function AppSidebar() {
+    const pathname = usePathname();
+    const [openMenus, setOpenMenus] = React.useState<string[]>([]);
+
+    const toggleMenu = (title: string) => {
+        setOpenMenus((prev) =>
+            prev.includes(title)
+                ? prev.filter((item) => item !== title)
+                : [...prev, title]
+        );
+    };
+
+    return (
+        <Sidebar>
+            <SidebarHeader className="border-b px-6 py-4">
+                <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                        <span className="text-lg font-bold">Z</span>
+                    </div>
+                    <div>
+                        <h2 className="text-lg font-semibold">ZeroTec</h2>
+                        <p className="text-xs text-muted-foreground">ERP System</p>
+                    </div>
+                </div>
+            </SidebarHeader>
+
+            <SidebarContent>
+                <SidebarGroup>
+                    <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {menuItems.map((item) => (
+                                <SidebarMenuItem key={item.title}>
+                                    {item.items ? (
+                                        <>
+                                            <SidebarMenuButton
+                                                onClick={() => toggleMenu(item.title)}
+                                                className="w-full"
+                                            >
+                                                <item.icon className="h-4 w-4" />
+                                                <span>{item.title}</span>
+                                                <ChevronDown
+                                                    className={`ml-auto h-4 w-4 transition-transform ${openMenus.includes(item.title) ? "rotate-180" : ""
+                                                        }`}
+                                                />
+                                            </SidebarMenuButton>
+                                            {openMenus.includes(item.title) && (
+                                                <SidebarMenuSub>
+                                                    {item.items.map((subItem) => (
+                                                        <SidebarMenuSubItem key={subItem.href}>
+                                                            <SidebarMenuSubButton
+                                                                asChild
+                                                                isActive={pathname === subItem.href}
+                                                            >
+                                                                <Link href={subItem.href}>{subItem.title}</Link>
+                                                            </SidebarMenuSubButton>
+                                                        </SidebarMenuSubItem>
+                                                    ))}
+                                                </SidebarMenuSub>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <SidebarMenuButton
+                                            asChild
+                                            isActive={pathname === item.href}
+                                        >
+                                            <Link href={item.href!}>
+                                                <item.icon className="h-4 w-4" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    )}
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            </SidebarContent>
+
+            <SidebarFooter className="border-t p-4">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-accent">
+                            <Avatar className="h-8 w-8">
+                                <AvatarFallback>AD</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 text-left text-sm">
+                                <p className="font-medium">Admin</p>
+                                <p className="text-xs text-muted-foreground">admin@zerotec.com</p>
+                            </div>
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem>
+                            <Settings className="mr-2 h-4 w-4" />
+                            Configurações
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                localStorage.removeItem('access_token');
+                                localStorage.removeItem('refresh_token');
+                                window.location.href = '/login';
+                            }
+                        }}>
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sair
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </SidebarFooter>
+        </Sidebar>
+    );
+}

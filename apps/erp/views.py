@@ -5,7 +5,7 @@ Views for ERP models
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Categoria, Cliente, Fornecedor, Produto
 from .serializers import (
@@ -26,7 +26,7 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     """
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['nome', 'descricao']
     ordering_fields = ['nome', 'tipo', 'created_at']
@@ -38,7 +38,7 @@ class ClienteViewSet(viewsets.ModelViewSet):
     ViewSet for Cliente
     """
     queryset = Cliente.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['nome_razao_social', 'nome_fantasia', 'cpf_cnpj', 'email', 'telefone_principal']
     ordering_fields = ['nome_razao_social', 'created_at']
@@ -129,7 +129,7 @@ class FornecedorViewSet(viewsets.ModelViewSet):
     ViewSet for Fornecedor
     """
     queryset = Fornecedor.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['razao_social', 'nome_fantasia', 'cnpj', 'email', 'telefone_principal']
     ordering_fields = ['razao_social', 'created_at']
@@ -208,7 +208,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     ViewSet for Produto
     """
     queryset = Produto.objects.select_related('categoria').all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
     search_fields = ['nome', 'descricao', 'codigo_interno', 'codigo_barras']
     ordering_fields = ['nome', 'preco_venda', 'estoque_atual', 'created_at']

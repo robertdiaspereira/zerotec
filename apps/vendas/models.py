@@ -3,6 +3,7 @@ Vendas Models - Vendas, PDV e Formas de Pagamento
 """
 
 from django.db import models
+from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from apps.core.models import BaseModel
@@ -120,7 +121,8 @@ class Venda(BaseModel):
     @property
     def saldo_pendente(self):
         """Saldo pendente de pagamento"""
-        return self.valor_total - self.total_pago
+        # Garantir que ambos os operandos sejam Decimal
+        return Decimal(self.valor_total) - self.total_pago
 
 
 class ItemVenda(models.Model):

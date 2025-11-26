@@ -60,13 +60,11 @@ class DashboardView(APIView):
         
         vendas_stats = vendas_mes.aggregate(
             total=Sum('valor_total'),
-            descontos=Sum('desconto'),
-            frete=Sum('frete')
+            descontos=Sum('valor_desconto')
         )
         
         total_vendas_mes = vendas_stats['total'] or 0
         total_descontos = vendas_stats['descontos'] or 0
-        total_frete = vendas_stats['frete'] or 0
         qtd_vendas_mes = vendas_mes.count()
         
         # Vendas mês passado para comparação
@@ -84,15 +82,13 @@ class DashboardView(APIView):
         
         os_stats = os_mes.aggregate(
             total=Sum('valor_total'),
-            servicos=Sum('valor_servicos'),
-            produtos=Sum('valor_produtos'),
-            custos=Sum('custo_total')
+            servicos=Sum('valor_servico'),
+            pecas=Sum('valor_pecas')
         )
         
         total_os = os_stats['total'] or 0
         valor_servicos = os_stats['servicos'] or 0
-        valor_produtos_os = os_stats['produtos'] or 0
-        custos_os = os_stats['custos'] or 0
+        valor_pecas_os = os_stats['pecas'] or 0
         qtd_os_mes = os_mes.count()
         
         # ========== CONTAS A RECEBER ==========
@@ -150,48 +146,51 @@ class DashboardView(APIView):
         
         # ========== RESPOSTA ==========
         data = {
-            'periodo': {
-                'mes': mes,
-                'ano': ano,
-                'data_inicio': inicio_mes.isoformat(),
-                'data_fim': fim_mes.isoformat()
+            'kpis': {
+                'vendas_mes': {
+                    'total': float(total_vendas_mes),
+                    'quantidade': qtd_vendas_mes,
+                    'ticket_medio': float(total_vendas_mes / qtd_vendas_mes) if qtd_vendas_mes > 0 else 0,
+                    'variacao': (
+                        ((total_vendas_mes - vendas_mes_passado) / vendas_mes_passado * 100)
+                        if vendas_mes_passado > 0 else 0
+                    )
+                },
+                'os_mes': {
+                    'total': float(total_os),
+                    'quantidade': qtd_os_mes,
+                    'abertas': OrdemServico.objects.filter(
+                        data_abertura__gte=inicio_mes,
+                        data_abertura__lte=fim_mes,
+                        status__in=['aberta', 'em_andamento', 'aguardando_pecas']
+                    ).count(),
+                    'concluidas': OrdemServico.objects.filter(
+                        data_abertura__gte=inicio_mes,
+                        data_abertura__lte=fim_mes,
+                        status='concluida'
+                    ).count()
+                },
+                'financeiro_mes': {
+                    'receber': float(contas_receber_mes),
+                    'pagar': float(contas_pagar_mes),
+                    'saldo': float(contas_receber_mes - contas_pagar_mes)
+                }
             },
-            'vendas': {
-                'total': float(total_vendas_mes),
-                'quantidade': qtd_vendas_mes,
-                'descontos': float(total_descontos),
-                'frete': float(total_frete),
-                'ticket_medio': float(total_vendas_mes / qtd_vendas_mes) if qtd_vendas_mes > 0 else 0,
-                'crescimento_percentual': (
-                    ((total_vendas_mes - vendas_mes_passado) / vendas_mes_passado * 100)
-                    if vendas_mes_passado > 0 else 0
-                )
+            'graficos': {
+                'vendas_ano': [
+                    {'mes': i+1, 'valor': graficos_anuais['vendas_anual'][i]}
+                    for i in range(12)
+                ],
+                'custos_ano': [
+                    {'mes': i+1, 'valor': graficos_anuais['custos_vendas_anual'][i]}
+                    for i in range(12)
+                ],
+                'os_ano': [
+                    {'mes': i+1, 'quantidade': int(graficos_anuais['os_servicos_anual'][i] + graficos_anuais['os_produtos_anual'][i])}
+                    for i in range(12)
+                ]
             },
-            'os': {
-                'total': float(total_os),
-                'quantidade': qtd_os_mes,
-                'servicos': float(valor_servicos),
-                'produtos': float(valor_produtos_os),
-                'custos': float(custos_os),
-                'lucro': float(total_os - custos_os)
-            },
-            'contas_receber': {
-                'hoje': float(contas_receber_hoje),
-                'mes': float(contas_receber_mes),
-                'atrasadas': float(contas_receber_atrasadas),
-                'total_pendente': float(contas_receber_hoje + contas_receber_mes + contas_receber_atrasadas)
-            },
-            'contas_pagar': {
-                'hoje': float(contas_pagar_hoje),
-                'mes': float(contas_pagar_mes),
-                'atrasadas': float(contas_pagar_atrasadas),
-                'total_pendente': float(contas_pagar_hoje + contas_pagar_mes + contas_pagar_atrasadas)
-            },
-            'despesas': {
-                'total_mes': float(despesas_mes)
-            },
-            'graficos': graficos_anuais,
-            'ultimas_movimentacoes': ultimas_movimentacoes
+            'ultimas_movimentacoes': self._format_movimentacoes(ultimas_movimentacoes)
         }
         
         # Check if export format is requested
@@ -236,28 +235,26 @@ class DashboardView(APIView):
             vendas = Venda.objects.filter(
                 data_venda__gte=inicio,
                 data_venda__lte=fim,
-                status='finalizada'
+                status='faturado'  # Mudado de 'finalizada' para 'faturado'
             ).aggregate(
-                total=Sum('valor_total'),
-                custos=Sum('custo_total')
+                total=Sum('valor_total')
             )
             
             vendas_mensal.append(float(vendas['total'] or 0))
-            custos_vendas_mensal.append(float(vendas['custos'] or 0))
+            custos_vendas_mensal.append(0)  # Venda não tem custo_total
             
             # OS
             os = OrdemServico.objects.filter(
                 data_abertura__gte=inicio,
                 data_abertura__lte=fim
             ).aggregate(
-                servicos=Sum('valor_servicos'),
-                produtos=Sum('valor_produtos'),
-                custos=Sum('custo_total')
+                servicos=Sum('valor_servico'),
+                pecas=Sum('valor_pecas')
             )
             
             os_servicos_mensal.append(float(os['servicos'] or 0))
-            os_produtos_mensal.append(float(os['produtos'] or 0))
-            os_custos_mensal.append(float(os['custos'] or 0))
+            os_produtos_mensal.append(float(os['pecas'] or 0))
+            os_custos_mensal.append(0)  # OS não tem custo_total
         
         return {
             'vendas_anual': vendas_mensal,
@@ -309,6 +306,46 @@ class DashboardView(APIView):
             'os': list(ultimas_os),
             'compras': list(ultimas_compras)
         }
+    
+    def _format_movimentacoes(self, movimentacoes):
+        """
+        Formata as movimentações para o formato esperado pelo frontend
+        """
+        resultado = []
+        
+        # Formatar vendas
+        for venda in movimentacoes['vendas']:
+            resultado.append({
+                'id': venda['id'],
+                'tipo': 'venda',
+                'descricao': f"Venda {venda['numero']} - {venda['cliente__nome_razao_social']}",
+                'valor': float(venda['valor_total']),
+                'data': venda['data_venda'].isoformat() if hasattr(venda['data_venda'], 'isoformat') else str(venda['data_venda'])
+            })
+        
+        # Formatar OS
+        for os in movimentacoes['os']:
+            resultado.append({
+                'id': os['id'],
+                'tipo': 'os',
+                'descricao': f"OS {os['numero']} - {os['cliente__nome_razao_social']}",
+                'valor': float(os['valor_total']),
+                'data': os['data_abertura'].isoformat() if hasattr(os['data_abertura'], 'isoformat') else str(os['data_abertura'])
+            })
+        
+        # Formatar compras
+        for compra in movimentacoes['compras']:
+            resultado.append({
+                'id': compra['id'],
+                'tipo': 'compra',
+                'descricao': f"Compra {compra['numero']} - {compra['fornecedor__razao_social']}",
+                'valor': float(compra['valor_total']),
+                'data': compra['data_pedido'].isoformat() if hasattr(compra['data_pedido'], 'isoformat') else str(compra['data_pedido'])
+            })
+        
+        # Ordenar por data (mais recente primeiro) e pegar apenas as 10 primeiras
+        resultado.sort(key=lambda x: x['data'], reverse=True)
+        return resultado[:10]
 
 
 

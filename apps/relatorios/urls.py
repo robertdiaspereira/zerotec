@@ -4,7 +4,7 @@ URL patterns for Reports app
 
 from django.urls import path
 from . import views
-from .views_dre import DREView
+from .views_dre import DREView, DREExportView
 
 app_name = 'relatorios'
 
@@ -14,6 +14,7 @@ urlpatterns = [
     
     # DRE
     path('dre/', DREView.as_view(), name='dre'),
+    path('dre/export/', DREExportView.as_view(), name='dre-export'),
     
     # Relatórios específicos
     path('vendas/', views.RelatorioVendasView.as_view(), name='vendas'),

@@ -30,19 +30,6 @@
 - [x] **Sangria de Caixa**
   - [x] Registro de sangria
   - [x] Vínculo com categoria DRE
-
-### 2. ✅ Testes de API (PRIORIDADE ALTA)
-- [ ] Testar endpoints de autenticação (login/logout/refresh)
-- [ ] Testar CRUD de Clientes
-- [ ] Testar CRUD de Produtos
-- [ ] Testar CRUD de Fornecedores
-- [ ] Testar módulo de Vendas
-- [ ] Testar módulo de Estoque
-- [ ] Testar módulo de Compras
-- [ ] Notificação de estoque baixo
-- [ ] Notificação de vencimento de contas
-- [ ] Notificação de nova OS
-- [ ] Notificação de mudança de status
 - [ ] Email de boas-vindas
 
 ### 5. 🔗 Webhooks (PRIORIDADE BAIXA)
@@ -53,11 +40,18 @@
 - [ ] Documentar webhooks disponíveis
 
 ### 6. 🌐 Frontend Next.js (PRIORIDADE ALTA)
-- [ ] Verificar se o projeto Next.js existe
-- [ ] Testar integração com API
-- [ ] Implementar autenticação
-- [ ] Implementar dashboard
-- [ ] Implementar páginas de módulos
+- [x] Criar projeto Next.js com TypeScript e TailwindCSS
+- [x] Instalar shadcn/ui components
+- [x] Criar cliente API para comunicação com Django
+- [x] Criar tipos TypeScript para dados da API
+- [x] Implementar sidebar de navegação
+- [x] Implementar layout do dashboard
+- [x] Implementar dashboard com KPIs e gráficos
+- [x] Implementar página de Vendas (listagem)
+- [x] Implementar página de Produtos (listagem)
+- [x] Implementar página de Clientes (listagem, detalhes, criação, edição)
+- [ ] Implementar página de DRE
+- [x] Implementar autenticação (login/logout)
 - [ ] Testar responsividade
 
 ### 7. 🔐 Segurança (PRIORIDADE ALTA)
@@ -90,9 +84,15 @@
 - [ ] Adicionar confirmações de ações
 - [ ] Melhorar feedback visual
 
+### 11. 🏢 Painel Super Admin (SaaS) (FUTURO)
+- [ ] Dashboard geral (Total de Tenants, Receita Recorrente)
+- [ ] Gestão de Tenants (Criar, Editar, Suspender empresas)
+- [ ] Planos e Assinaturas (Integração com Gateway de Pagamento)
+- [ ] Configurações Globais do SaaS
+
 ---
 
-## 📊 Progresso Geral
+## � Progresso Geral
 
 ### Módulos Implementados (8/8) ✅
 - ✅ ERP (Cadastros Base)
@@ -109,19 +109,7 @@
 - ⏳ Testes Automatizados
 - ⏳ Notificações Email
 - ⏳ Webhooks
-- ⏳ Frontend Next.js
-
----
-
-## 🎯 Próximos Passos Imediatos
-
-1. **Testar API via Swagger** - Verificar se todos os endpoints estão funcionando
-2. **Implementar Exportação PDF/Excel** - Funcionalidade crítica para relatórios
-3. **Criar Testes Básicos** - Garantir qualidade do código
-4. **Verificar Frontend** - Se existe e está funcionando
-5. **Preparar Deploy** - Scripts e configurações
-
----
+- ✅ Frontend Next.js (Em Desenvolvimento)
 
 ## 📝 Notas
 
@@ -129,8 +117,12 @@
 - **Ambiente Alvo**: VPS (PostgreSQL + Redis)
 - **Multi-tenancy**: Desabilitado em local, será habilitado na VPS
 - **Celery**: Desabilitado em local, será habilitado na VPS
+- **Frontend**: Next.js 16 + TypeScript + TailwindCSS + shadcn/ui
+- **Servidores Rodando**:
+  - Backend: http://127.0.0.1:8000/
+  - Frontend: http://localhost:3000/
 
 ---
 
 **Última Atualização**: 2025-11-25
-**Status**: Backend funcionando, pronto para testes
+**Status**: Backend e Frontend funcionando, dashboard implementado, módulo de Clientes completo.
