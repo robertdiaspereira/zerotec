@@ -69,7 +69,7 @@ export function QuickActionFab() {
                             <span>Novo Cliente</span>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => router.push("/clientes/novo?tipo=fornecedor")}>
+                        <DropdownMenuItem onClick={() => router.push("/fornecedores/novo")}>
                             <Truck className="mr-2 h-4 w-4" />
                             <span>Novo Fornecedor</span>
                         </DropdownMenuItem>
@@ -82,6 +82,11 @@ export function QuickActionFab() {
                         <DropdownMenuItem onClick={() => router.push("/estoque/movimentacoes/nova")}>
                             <ArrowLeftRight className="mr-2 h-4 w-4" />
                             <span>Ajuste de Estoque</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem onClick={() => router.push("/compras/novo")}>
+                            <Truck className="mr-2 h-4 w-4" />
+                            <span>Nova Compra</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuSeparator />

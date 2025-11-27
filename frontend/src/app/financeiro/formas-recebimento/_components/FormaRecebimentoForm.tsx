@@ -104,11 +104,12 @@ export default function FormaRecebimentoForm({ id }: FormaRecebimentoFormProps) 
                 });
             }
             router.push('/financeiro/formas-recebimento');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Erro ao salvar:', error);
+            const errorMessage = error?.message || error?.detail || 'Não foi possível salvar os dados.';
             toast({
                 title: 'Erro',
-                description: 'Não foi possível salvar os dados.',
+                description: errorMessage,
                 variant: 'destructive',
             });
         } finally {
