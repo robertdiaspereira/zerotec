@@ -36,7 +36,8 @@ export default function EmpresaPage() {
         facebook: "",
         obs_os: "",
         obs_venda: "",
-        politica_garantia: ""
+        garantia_produto: "",
+        garantia_servico: ""
     });
 
     React.useEffect(() => {
@@ -135,7 +136,7 @@ export default function EmpresaPage() {
                     <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
                     <TabsTrigger value="endereco">Endereço</TabsTrigger>
                     <TabsTrigger value="contato">Contato</TabsTrigger>
-                    <TabsTrigger value="documentos">Documentos</TabsTrigger>
+                    <TabsTrigger value="garantias">Garantias</TabsTrigger>
                 </TabsList>
 
                 {/* Dados Gerais */}
@@ -380,42 +381,46 @@ export default function EmpresaPage() {
                     </Card>
                 </TabsContent>
 
-                {/* Documentos */}
-                <TabsContent value="documentos" className="space-y-4">
+                {/* Garantias */}
+                <TabsContent value="garantias" className="space-y-4">
                     <Card>
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <FileText className="h-5 w-5" />
-                                <CardTitle>Configurações de Documentos</CardTitle>
+                                <CardTitle>Políticas de Garantia</CardTitle>
                             </div>
                             <CardDescription>
-                                Textos e informações para PDFs e documentos
+                                Textos de garantia que aparecem automaticamente em vendas e ordens de serviço
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="obs_os">Observações Padrão - Ordem de Serviço</Label>
+                                <Label htmlFor="garantia_produto">Garantia de Produtos</Label>
                                 <Textarea
-                                    id="obs_os"
-                                    value={formData.obs_os}
-                                    onChange={(e) => handleChange("obs_os", e.target.value)}
-                                    placeholder="Texto que aparece no rodapé das OS..."
-                                    rows={4}
+                                    id="garantia_produto"
+                                    value={formData.garantia_produto || ""}
+                                    onChange={(e) => handleChange("garantia_produto", e.target.value)}
+                                    placeholder="Texto de garantia que aparece em TODAS as vendas..."
+                                    rows={6}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Este texto aparecerá automaticamente em todas as vendas e ordens de serviço
+                                </p>
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="obs_venda">Observações Padrão - Vendas</Label>
+                                <Label htmlFor="garantia_servico">Garantia de Serviços</Label>
                                 <Textarea
-                                    id="obs_venda"
-                                    value={formData.obs_venda}
-                                    onChange={(e) => handleChange("obs_venda", e.target.value)}
-                                    placeholder="Texto que aparece no rodapé das vendas..."
-                                    rows={4}
+                                    id="garantia_servico"
+                                    value={formData.garantia_servico || ""}
+                                    onChange={(e) => handleChange("garantia_servico", e.target.value)}
+                                    placeholder="Texto de garantia que aparece em TODAS as ordens de serviço..."
+                                    rows={6}
                                 />
+                                <p className="text-xs text-muted-foreground">
+                                    Este texto aparecerá automaticamente em todas as ordens de serviço (além da garantia de produtos)
+                                </p>
                             </div>
-
-
                         </CardContent>
                     </Card>
                 </TabsContent>

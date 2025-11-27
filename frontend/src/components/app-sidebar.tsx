@@ -103,7 +103,6 @@ const menuItems = [
             { title: "Contas a Pagar", href: "/financeiro/fluxo-caixa?tipo=pagar" },
             { title: "Contas a Receber", href: "/financeiro/fluxo-caixa?tipo=receber" },
             { title: "Fluxo de Caixa", href: "/financeiro/fluxo-caixa" },
-            { title: "Formas de Pagamento", href: "/configuracoes/formas-pagamento" },
         ],
     },
     {

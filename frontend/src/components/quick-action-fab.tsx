@@ -45,8 +45,7 @@ export function QuickActionFab() {
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 mb-2">
-                        <DropdownMenuLabel>Ações Rápidas</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
+
 
                         <DropdownMenuItem onClick={() => router.push("/os/nova")}>
                             <Wrench className="mr-2 h-4 w-4" />

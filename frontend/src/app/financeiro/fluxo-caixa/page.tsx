@@ -26,7 +26,8 @@ import {
     Filter,
     Download,
     TrendingUp,
-    TrendingDown
+    TrendingDown,
+    Settings
 } from "lucide-react";
 
 interface Conta {
@@ -175,6 +176,10 @@ export default function FluxoCaixaPage() {
                     <p className="text-muted-foreground">{contas.length} {contas.length === 1 ? 'conta' : 'contas'}</p>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" onClick={() => window.location.href = '/financeiro/formas-recebimento'}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Formas de Recebimento
+                    </Button>
                     <Button variant="outline"><Filter className="mr-2 h-4 w-4" />Filtros</Button>
                     <Button variant="outline"><Download className="mr-2 h-4 w-4" />Exportar</Button>
                 </div>
