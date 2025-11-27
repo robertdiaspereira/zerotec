@@ -9,15 +9,16 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db.models import Sum, Q
+from decimal import Decimal
 from .models import (
     CategoriaFinanceira, ContaBancaria, ContaPagar, ContaReceber, FluxoCaixa,
-    FormaPagamento, Pagamento, Parcela
+    FormaRecebimento, FormaPagamento, Pagamento, Parcela
 )
 from .serializers import (
     CategoriaFinanceiraSerializer, ContaBancariaSerializer,
     ContaPagarSerializer, ContaPagarListSerializer,
     ContaReceberSerializer, ContaReceberListSerializer,
-    FluxoCaixaSerializer, FormaPagamentoSerializer,
+    FluxoCaixaSerializer, FormaRecebimentoSerializer, FormaRecebimentoListSerializer,
     PagamentoSerializer, ParcelaSerializer
 )
 
@@ -226,13 +227,74 @@ class FluxoCaixaViewSet(viewsets.ModelViewSet):
         return Response(list(por_categoria))
 
 
-class FormaPagamentoViewSet(viewsets.ModelViewSet):
-    queryset = FormaPagamento.objects.all()
-    serializer_class = FormaPagamentoSerializer
+class FormaRecebimentoViewSet(viewsets.ModelViewSet):
+    """ViewSet for FormaRecebimento"""
+    queryset = FormaRecebimento.objects.all()
     permission_classes = [IsAuthenticated]
-    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
-    search_fields = ['nome']
-    filterset_fields = ['tipo', 'ativo']
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter, DjangoFilterBackend]
+    search_fields = ['nome', 'operadora']
+    ordering_fields = ['nome', 'tipo']
+    filterset_fields = ['tipo', 'ativo', 'permite_parcelamento']
+    
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return FormaRecebimentoListSerializer
+        return FormaRecebimentoSerializer
+    
+    @action(detail=True, methods=['post'])
+    def calcular_taxa(self, request, pk=None):
+        """Calculate fee for a given value and installments"""
+        forma = self.get_object()
+        
+        valor = request.data.get('valor')
+        parcelas = request.data.get('parcelas', 1)
+        
+        if not valor:
+            return Response(
+                {'error': 'Valor é obrigatório'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            valor = Decimal(str(valor))
+            parcelas = int(parcelas)
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Valor ou parcelas inválidos'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if parcelas > forma.max_parcelas:
+            return Response(
+                {'error': f'Número máximo de parcelas é {forma.max_parcelas}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        taxa_total, valor_liquido = forma.calcular_taxa(valor, parcelas)
+        
+        return Response({
+            'valor_bruto': valor,
+            'parcelas': parcelas,
+            'taxa_percentual': forma.taxa_percentual,
+            'taxa_fixa': forma.taxa_fixa,
+            'taxa_total': taxa_total,
+            'valor_liquido': valor_liquido,
+            'valor_parcela': valor / parcelas if parcelas > 0 else valor,
+            'dias_recebimento': forma.dias_recebimento
+        })
+    
+    @action(detail=False, methods=['get'])
+    def ativos(self, request):
+        """Get only active payment methods"""
+        formas = self.queryset.filter(ativo=True)
+        serializer = FormaRecebimentoListSerializer(formas, many=True)
+        return Response(serializer.data)
+
+
+# Manter compatibilidade com código antigo
+class FormaPagamentoViewSet(FormaRecebimentoViewSet):
+    """Alias for backward compatibility"""
+    pass
 
 
 class PagamentoViewSet(viewsets.ModelViewSet):

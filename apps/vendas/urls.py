@@ -10,6 +10,7 @@ app_name = 'vendas'
 
 router = DefaultRouter()
 router.register(r'vendas', views.VendaViewSet, basename='venda')
+router.register(r'recebimentos-venda', views.RecebimentoVendaViewSet, basename='recebimento-venda')
 router.register(r'pdv', views.PDVViewSet, basename='pdv')
 
 urlpatterns = [

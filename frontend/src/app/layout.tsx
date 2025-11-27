@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
 import { QuickActionFab } from "@/components/quick-action-fab";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -27,6 +28,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <QuickActionFab />
+          <Toaster />
         </Providers>
       </body>
     </html>

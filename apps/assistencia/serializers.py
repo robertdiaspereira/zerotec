@@ -4,7 +4,7 @@ Serializers for Assistencia models
 
 from rest_framework import serializers
 from .models import (
-    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS,
+    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS, RecebimentoOS,
     ServicoTemplate, ChecklistItem, TermoGarantia, OSAnexo, CategoriaServico
 )
 
@@ -83,12 +83,35 @@ class HistoricoOSSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'data']
 
 
+class RecebimentoOSSerializer(serializers.ModelSerializer):
+    """Serializer for RecebimentoOS"""
+    
+    forma_recebimento_nome = serializers.CharField(source='forma_recebimento.nome', read_only=True)
+    forma_recebimento_tipo = serializers.CharField(source='forma_recebimento.get_tipo_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    
+    class Meta:
+        model = RecebimentoOS
+        fields = [
+            'id', 'os', 'forma_recebimento', 'forma_recebimento_nome', 
+            'forma_recebimento_tipo', 'valor_bruto', 'taxa_percentual', 'taxa_fixa',
+            'valor_taxa_total', 'valor_liquido', 'parcelas', 'data_vencimento',
+            'data_recebimento', 'data_prevista_recebimento', 'status', 
+            'status_display', 'observacoes', 'created_at'
+        ]
+        read_only_fields = [
+            'id', 'taxa_percentual', 'taxa_fixa', 'valor_taxa_total', 
+            'valor_liquido', 'data_prevista_recebimento', 'created_at'
+        ]
+
+
 class OrdemServicoSerializer(serializers.ModelSerializer):
     """Serializer for OrdemServico"""
     
     pecas = PecaOSSerializer(many=True, read_only=True)
     orcamentos = OrcamentoOSSerializer(many=True, read_only=True)
     historico = HistoricoOSSerializer(many=True, read_only=True)
+    recebimentos = RecebimentoOSSerializer(many=True, read_only=True)
     anexos = OSAnexoSerializer(many=True, read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome_razao_social', read_only=True)
     tecnico_nome = serializers.CharField(source='tecnico.get_full_name', read_only=True)
@@ -108,10 +131,10 @@ class OrdemServicoSerializer(serializers.ModelSerializer):
             'status_display', 'prioridade', 'prioridade_display', 'valor_servico',
             'valor_pecas', 'valor_desconto', 'valor_total', 'garantia_dias',
             'data_fim_garantia', 'tecnico', 'tecnico_nome', 'observacoes_internas',
-            'pecas', 'orcamentos', 'historico', 'anexos', 'total_pecas', 'em_garantia',
-            'dias_aberta', 'active', 'created_at', 'updated_at',
-            'checklist', 'obs_recebimento', 'laudo_tecnico', 'valor_frete',
-            'forma_pagamento', 'protocolo_entrega'
+            'pecas', 'orcamentos', 'historico', 'recebimentos', 'anexos', 
+            'total_pecas', 'em_garantia', 'dias_aberta', 'active', 
+            'created_at', 'updated_at', 'checklist', 'obs_recebimento', 
+            'laudo_tecnico', 'valor_frete', 'protocolo_entrega'
         ]
         read_only_fields = [
             'id', 'numero', 'data_abertura', 'data_conclusao', 'data_entrega',

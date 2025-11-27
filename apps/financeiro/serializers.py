@@ -139,10 +139,39 @@ class FluxoCaixaSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-class FormaPagamentoSerializer(serializers.ModelSerializer):
+class FormaRecebimentoSerializer(serializers.ModelSerializer):
+    """Serializer for FormaRecebimento"""
+    
+    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    
+    class Meta:
+        model = FormaPagamento  # FormaPagamento é alias de FormaRecebimento
+        fields = [
+            'id', 'nome', 'tipo', 'tipo_display', 'taxa_percentual', 'taxa_fixa',
+            'permite_parcelamento', 'max_parcelas', 'taxa_parcelado_2x',
+            'taxa_parcelado_3x', 'taxa_parcelado_4_6x', 'taxa_parcelado_7_12x',
+            'dias_recebimento', 'operadora', 'ativo', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class FormaRecebimentoListSerializer(serializers.ModelSerializer):
+    """Simplified serializer for listing payment methods"""
+    
+    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    
     class Meta:
         model = FormaPagamento
-        fields = '__all__'
+        fields = [
+            'id', 'nome', 'tipo', 'tipo_display', 'taxa_percentual',
+            'permite_parcelamento', 'max_parcelas', 'ativo'
+        ]
+
+
+# Manter compatibilidade com código antigo
+class FormaPagamentoSerializer(FormaRecebimentoSerializer):
+    """Alias for backward compatibility"""
+    pass
 
 
 class ParcelaSerializer(serializers.ModelSerializer):

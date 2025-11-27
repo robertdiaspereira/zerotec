@@ -1,17 +1,24 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Building2, Save, Upload, MapPin, Phone, Mail, FileText, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { ArrowLeft, Save, Loader2, Building2, MapPin, Phone, FileText } from "lucide-react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
-export default function EmpresaPage() {
+interface FornecedorFormProps {
+    fornecedorId?: number;
+}
+
+export function FornecedorForm({ fornecedorId }: FornecedorFormProps) {
+    const router = useRouter();
     const { toast } = useToast();
     const [loading, setLoading] = React.useState(false);
     const [saving, setSaving] = React.useState(false);
@@ -20,7 +27,12 @@ export default function EmpresaPage() {
         razao_social: "",
         nome_fantasia: "",
         cnpj: "",
-        inscricao_estadual: "",
+        ie: "",
+        telefone_principal: "",
+        telefone_secundario: "",
+        email: "",
+        contato_nome: "",
+        contato_cargo: "",
         cep: "",
         logradouro: "",
         numero: "",
@@ -28,36 +40,45 @@ export default function EmpresaPage() {
         bairro: "",
         cidade: "",
         estado: "",
-        telefone: "",
-        celular: "",
-        email: "",
-        site: "",
-        instagram: "",
-        facebook: "",
-        obs_os: "",
-        obs_venda: "",
-        politica_garantia: ""
+        observacoes: "",
+        active: true,
     });
 
     React.useEffect(() => {
-        loadData();
-    }, []);
+        if (fornecedorId) {
+            loadFornecedor();
+        }
+    }, [fornecedorId]);
 
-    const loadData = async () => {
+    const loadFornecedor = async () => {
         try {
             setLoading(true);
-            const data: any = await api.getEmpresa();
-            if (data && Object.keys(data).length > 0) {
-                setFormData(prev => ({
-                    ...prev,
-                    ...data
-                }));
-            }
+            const data: any = await api.getFornecedor(fornecedorId!);
+            setFormData({
+                razao_social: data.razao_social || "",
+                nome_fantasia: data.nome_fantasia || "",
+                cnpj: data.cnpj || "",
+                ie: data.ie || "",
+                telefone_principal: data.telefone_principal || "",
+                telefone_secundario: data.telefone_secundario || "",
+                email: data.email || "",
+                contato_nome: data.contato_nome || "",
+                contato_cargo: data.contato_cargo || "",
+                cep: data.cep || "",
+                logradouro: data.logradouro || "",
+                numero: data.numero || "",
+                complemento: data.complemento || "",
+                bairro: data.bairro || "",
+                cidade: data.cidade || "",
+                estado: data.estado || "",
+                observacoes: data.observacoes || "",
+                active: data.active !== undefined ? data.active : true,
+            });
         } catch (error) {
-            console.error("Erro ao carregar dados da empresa:", error);
+            console.error("Erro ao carregar fornecedor:", error);
             toast({
                 title: "Erro",
-                description: "Não foi possível carregar os dados da empresa.",
+                description: "Não foi possível carregar os dados do fornecedor.",
                 variant: "destructive",
             });
         } finally {
@@ -65,15 +86,15 @@ export default function EmpresaPage() {
         }
     };
 
-    const handleChange = (field: string, value: string) => {
-        setFormData(prev => ({ ...prev, [field]: value }));
+    const handleChange = (field: string, value: any) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = async () => {
+    const handleSubmit = async () => {
         if (!formData.razao_social || !formData.cnpj) {
             toast({
                 title: "Atenção",
-                description: "Preencha os campos obrigatórios (Razão Social e CNPJ).",
+                description: "Preencha os campos obrigatórios: Razão Social e CNPJ.",
                 variant: "destructive",
             });
             return;
@@ -81,16 +102,25 @@ export default function EmpresaPage() {
 
         try {
             setSaving(true);
-            await api.updateEmpresa(formData);
-            toast({
-                title: "Sucesso",
-                description: "Dados da empresa atualizados com sucesso!",
-            });
+            if (fornecedorId) {
+                await api.updateFornecedor(fornecedorId, formData);
+                toast({
+                    title: "Sucesso",
+                    description: "Fornecedor atualizado com sucesso!",
+                });
+            } else {
+                await api.createFornecedor(formData);
+                toast({
+                    title: "Sucesso",
+                    description: "Fornecedor cadastrado com sucesso!",
+                });
+            }
+            router.push("/fornecedores");
         } catch (error) {
-            console.error("Erro ao salvar empresa:", error);
+            console.error("Erro ao salvar fornecedor:", error);
             toast({
                 title: "Erro",
-                description: "Erro ao salvar os dados da empresa.",
+                description: "Não foi possível salvar o fornecedor.",
                 variant: "destructive",
             });
         } finally {
@@ -108,14 +138,22 @@ export default function EmpresaPage() {
 
     return (
         <div className="space-y-6">
+            {/* Header */}
             <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Perfil da Empresa</h1>
-                    <p className="text-muted-foreground">
-                        Dados da empresa para documentos, relatórios e PDFs
-                    </p>
+                <div className="flex items-center gap-4">
+                    <Button variant="ghost" size="sm" onClick={() => router.push("/fornecedores")}>
+                        <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">
+                            {fornecedorId ? "Editar Fornecedor" : "Novo Fornecedor"}
+                        </h1>
+                        <p className="text-muted-foreground">
+                            {fornecedorId ? "Atualize os dados do fornecedor" : "Cadastre um novo fornecedor"}
+                        </p>
+                    </div>
                 </div>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSubmit} disabled={saving}>
                     {saving ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -124,7 +162,7 @@ export default function EmpresaPage() {
                     ) : (
                         <>
                             <Save className="mr-2 h-4 w-4" />
-                            Salvar Alterações
+                            Salvar
                         </>
                     )}
                 </Button>
@@ -135,16 +173,19 @@ export default function EmpresaPage() {
                     <TabsTrigger value="dados">Dados Gerais</TabsTrigger>
                     <TabsTrigger value="endereco">Endereço</TabsTrigger>
                     <TabsTrigger value="contato">Contato</TabsTrigger>
-                    <TabsTrigger value="documentos">Documentos</TabsTrigger>
+                    <TabsTrigger value="observacoes">Observações</TabsTrigger>
                 </TabsList>
 
                 {/* Dados Gerais */}
                 <TabsContent value="dados" className="space-y-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Informações da Empresa</CardTitle>
+                            <div className="flex items-center gap-2">
+                                <Building2 className="h-5 w-5" />
+                                <CardTitle>Informações da Empresa</CardTitle>
+                            </div>
                             <CardDescription>
-                                Dados principais que aparecem em documentos e relatórios
+                                Dados principais do fornecedor
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -155,16 +196,16 @@ export default function EmpresaPage() {
                                         id="razao_social"
                                         value={formData.razao_social}
                                         onChange={(e) => handleChange("razao_social", e.target.value)}
-                                        placeholder="ZEROTEC ASSISTENCIA TECNICA LTDA"
+                                        placeholder="EMPRESA FORNECEDORA LTDA"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="nome_fantasia">Nome Fantasia *</Label>
+                                    <Label htmlFor="nome_fantasia">Nome Fantasia</Label>
                                     <Input
                                         id="nome_fantasia"
                                         value={formData.nome_fantasia}
                                         onChange={(e) => handleChange("nome_fantasia", e.target.value)}
-                                        placeholder="ZeroTec"
+                                        placeholder="Fornecedor XYZ"
                                     />
                                 </div>
                             </div>
@@ -180,32 +221,23 @@ export default function EmpresaPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
+                                    <Label htmlFor="ie">Inscrição Estadual</Label>
                                     <Input
-                                        id="inscricao_estadual"
-                                        value={formData.inscricao_estadual}
-                                        onChange={(e) => handleChange("inscricao_estadual", e.target.value)}
+                                        id="ie"
+                                        value={formData.ie}
+                                        onChange={(e) => handleChange("ie", e.target.value)}
                                         placeholder="000.000.000.000"
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <Label htmlFor="logo">Logo da Empresa</Label>
-                                <div className="flex items-center gap-4">
-                                    <div className="h-24 w-24 rounded-lg border-2 border-dashed border-muted-foreground/25 flex items-center justify-center">
-                                        <Building2 className="h-8 w-8 text-muted-foreground" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <Button variant="outline" size="sm" disabled>
-                                            <Upload className="mr-2 h-4 w-4" />
-                                            Fazer Upload (Em Breve)
-                                        </Button>
-                                        <p className="text-xs text-muted-foreground mt-2">
-                                            Recomendado: PNG ou JPG, máximo 2MB
-                                        </p>
-                                    </div>
-                                </div>
+                            <div className="flex items-center space-x-2">
+                                <Switch
+                                    id="active"
+                                    checked={formData.active}
+                                    onCheckedChange={(checked) => handleChange("active", checked)}
+                                />
+                                <Label htmlFor="active">Fornecedor Ativo</Label>
                             </div>
                         </CardContent>
                     </Card>
@@ -220,13 +252,13 @@ export default function EmpresaPage() {
                                 <CardTitle>Endereço</CardTitle>
                             </div>
                             <CardDescription>
-                                Endereço completo da empresa
+                                Endereço completo do fornecedor
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-2">
-                                    <Label htmlFor="cep">CEP *</Label>
+                                    <Label htmlFor="cep">CEP</Label>
                                     <Input
                                         id="cep"
                                         value={formData.cep}
@@ -235,7 +267,7 @@ export default function EmpresaPage() {
                                     />
                                 </div>
                                 <div className="space-y-2 md:col-span-2">
-                                    <Label htmlFor="logradouro">Logradouro *</Label>
+                                    <Label htmlFor="logradouro">Logradouro</Label>
                                     <Input
                                         id="logradouro"
                                         value={formData.logradouro}
@@ -247,7 +279,7 @@ export default function EmpresaPage() {
 
                             <div className="grid gap-4 md:grid-cols-4">
                                 <div className="space-y-2">
-                                    <Label htmlFor="numero">Número *</Label>
+                                    <Label htmlFor="numero">Número</Label>
                                     <Input
                                         id="numero"
                                         value={formData.numero}
@@ -268,7 +300,7 @@ export default function EmpresaPage() {
 
                             <div className="grid gap-4 md:grid-cols-3">
                                 <div className="space-y-2">
-                                    <Label htmlFor="bairro">Bairro *</Label>
+                                    <Label htmlFor="bairro">Bairro</Label>
                                     <Input
                                         id="bairro"
                                         value={formData.bairro}
@@ -277,7 +309,7 @@ export default function EmpresaPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="cidade">Cidade *</Label>
+                                    <Label htmlFor="cidade">Cidade</Label>
                                     <Input
                                         id="cidade"
                                         value={formData.cidade}
@@ -286,7 +318,7 @@ export default function EmpresaPage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="estado">Estado *</Label>
+                                    <Label htmlFor="estado">Estado</Label>
                                     <Input
                                         id="estado"
                                         value={formData.estado}
@@ -309,70 +341,59 @@ export default function EmpresaPage() {
                                 <CardTitle>Informações de Contato</CardTitle>
                             </div>
                             <CardDescription>
-                                Telefones, e-mails e redes sociais
+                                Telefones, e-mails e pessoa de contato
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="telefone">Telefone Principal *</Label>
+                                    <Label htmlFor="telefone_principal">Telefone Principal</Label>
                                     <Input
-                                        id="telefone"
-                                        value={formData.telefone}
-                                        onChange={(e) => handleChange("telefone", e.target.value)}
+                                        id="telefone_principal"
+                                        value={formData.telefone_principal}
+                                        onChange={(e) => handleChange("telefone_principal", e.target.value)}
                                         placeholder="(00) 0000-0000"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="celular">Celular/WhatsApp</Label>
+                                    <Label htmlFor="telefone_secundario">Telefone Secundário</Label>
                                     <Input
-                                        id="celular"
-                                        value={formData.celular}
-                                        onChange={(e) => handleChange("celular", e.target.value)}
+                                        id="telefone_secundario"
+                                        value={formData.telefone_secundario}
+                                        onChange={(e) => handleChange("telefone_secundario", e.target.value)}
                                         placeholder="(00) 00000-0000"
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">E-mail Principal *</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={(e) => handleChange("email", e.target.value)}
-                                        placeholder="contato@empresa.com"
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="site">Website</Label>
-                                    <Input
-                                        id="site"
-                                        value={formData.site}
-                                        onChange={(e) => handleChange("site", e.target.value)}
-                                        placeholder="www.empresa.com"
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="email">E-mail</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={(e) => handleChange("email", e.target.value)}
+                                    placeholder="contato@fornecedor.com"
+                                />
                             </div>
 
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
-                                    <Label htmlFor="instagram">Instagram</Label>
+                                    <Label htmlFor="contato_nome">Nome do Contato</Label>
                                     <Input
-                                        id="instagram"
-                                        value={formData.instagram}
-                                        onChange={(e) => handleChange("instagram", e.target.value)}
-                                        placeholder="@empresa"
+                                        id="contato_nome"
+                                        value={formData.contato_nome}
+                                        onChange={(e) => handleChange("contato_nome", e.target.value)}
+                                        placeholder="João Silva"
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="facebook">Facebook</Label>
+                                    <Label htmlFor="contato_cargo">Cargo do Contato</Label>
                                     <Input
-                                        id="facebook"
-                                        value={formData.facebook}
-                                        onChange={(e) => handleChange("facebook", e.target.value)}
-                                        placeholder="facebook.com/empresa"
+                                        id="contato_cargo"
+                                        value={formData.contato_cargo}
+                                        onChange={(e) => handleChange("contato_cargo", e.target.value)}
+                                        placeholder="Gerente Comercial"
                                     />
                                 </div>
                             </div>
@@ -380,42 +401,29 @@ export default function EmpresaPage() {
                     </Card>
                 </TabsContent>
 
-                {/* Documentos */}
-                <TabsContent value="documentos" className="space-y-4">
+                {/* Observações */}
+                <TabsContent value="observacoes" className="space-y-4">
                     <Card>
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <FileText className="h-5 w-5" />
-                                <CardTitle>Configurações de Documentos</CardTitle>
+                                <CardTitle>Observações</CardTitle>
                             </div>
                             <CardDescription>
-                                Textos e informações para PDFs e documentos
+                                Informações adicionais sobre o fornecedor
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent>
                             <div className="space-y-2">
-                                <Label htmlFor="obs_os">Observações Padrão - Ordem de Serviço</Label>
+                                <Label htmlFor="observacoes">Observações</Label>
                                 <Textarea
-                                    id="obs_os"
-                                    value={formData.obs_os}
-                                    onChange={(e) => handleChange("obs_os", e.target.value)}
-                                    placeholder="Texto que aparece no rodapé das OS..."
-                                    rows={4}
+                                    id="observacoes"
+                                    value={formData.observacoes}
+                                    onChange={(e) => handleChange("observacoes", e.target.value)}
+                                    placeholder="Informações adicionais, condições especiais, etc."
+                                    rows={6}
                                 />
                             </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="obs_venda">Observações Padrão - Vendas</Label>
-                                <Textarea
-                                    id="obs_venda"
-                                    value={formData.obs_venda}
-                                    onChange={(e) => handleChange("obs_venda", e.target.value)}
-                                    placeholder="Texto que aparece no rodapé das vendas..."
-                                    rows={4}
-                                />
-                            </div>
-
-
                         </CardContent>
                     </Card>
                 </TabsContent>

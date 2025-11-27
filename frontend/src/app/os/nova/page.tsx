@@ -31,14 +31,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Plus, Trash2, Search, CreditCard, Upload } from "lucide-react";
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
+import api from "@/lib/api";
+import { SeletorPagamento } from "@/components/vendas/SeletorPagamento";
+import { useToast } from "@/hooks/use-toast";
 
 interface CarrinhoItem {
     id: string;
@@ -64,16 +59,6 @@ interface ServicoTemplate {
     valor_padrao: string;
 }
 
-interface FormaPagamento {
-    id: number;
-    nome: string;
-    tipo: string;
-    taxa_percentual: string;
-    taxa_fixa: string;
-    permite_parcelamento: boolean;
-    max_parcelas: number;
-}
-
 interface TermoGarantia {
     id: number;
     titulo: string;
@@ -82,15 +67,21 @@ interface TermoGarantia {
     padrao: boolean;
 }
 
+interface PagamentoInfo {
+    formaRecebimentoId: number;
+    parcelas: number;
+    valor: number;
+}
+
 export default function NovaOSPage() {
     const router = useRouter();
+    const { toast } = useToast();
     const [loading, setLoading] = React.useState(false);
     const [clientes, setClientes] = React.useState<any[]>([]);
     const [carrinho, setCarrinho] = React.useState<CarrinhoItem[]>([]);
 
     const [checklistItems, setChecklistItems] = React.useState<ChecklistItem[]>([]);
     const [servicosTemplate, setServicosTemplate] = React.useState<ServicoTemplate[]>([]);
-    const [formasPagamento, setFormasPagamento] = React.useState<FormaPagamento[]>([]);
     const [termosGarantia, setTermosGarantia] = React.useState<TermoGarantia[]>([]);
     const [searchResults, setSearchResults] = React.useState<any[]>([]);
 
@@ -111,11 +102,11 @@ export default function NovaOSPage() {
         obs_cliente: "",
         valor_frete: "0",
         valor_desconto: "0",
-        forma_pagamento_id: "",
-        parcelas: "1",
         termo_garantia_produto_id: "",
         termo_garantia_servico_id: "",
     });
+
+    const [pagamentoInfo, setPagamentoInfo] = React.useState<PagamentoInfo | null>(null);
 
     const [novoServico, setNovoServico] = React.useState({
         template_id: "",
@@ -127,18 +118,18 @@ export default function NovaOSPage() {
     React.useEffect(() => {
         async function loadData() {
             try {
-                const [clientesRes, checklistRes, servicosRes, formasRes, termosRes] = await Promise.all([
-                    fetch("http://localhost:8000/api/erp/clientes/"),
+                // Usando fetch direto para endpoints que ainda não estão no api.ts
+                // Idealmente mover tudo para api.ts
+                const [clientesRes, checklistRes, servicosRes, termosRes] = await Promise.all([
+                    api.getClientes(),
                     fetch("http://localhost:8000/api/assistencia/checklist-items/"),
                     fetch("http://localhost:8000/api/assistencia/servicos-template/"),
-                    fetch("http://localhost:8000/api/financeiro/formas-pagamento/"),
                     fetch("http://localhost:8000/api/assistencia/termos-garantia/"),
                 ]);
 
-                const clientesData = await clientesRes.json();
+                const clientesData = clientesRes; // api.getClientes já retorna json
                 const checklistData = await checklistRes.json();
                 const servicosData = await servicosRes.json();
-                const formasData = await formasRes.json();
                 const termosData = await termosRes.json();
 
                 setClientes(Array.isArray(clientesData) ? clientesData : clientesData.results || []);
@@ -150,7 +141,6 @@ export default function NovaOSPage() {
                 })));
 
                 setServicosTemplate(Array.isArray(servicosData) ? servicosData : servicosData.results || []);
-                setFormasPagamento(Array.isArray(formasData) ? formasData : formasData.results || []);
                 setTermosGarantia(Array.isArray(termosData) ? termosData : termosData.results || []);
 
                 const defaultProduto = termosData.find((t: any) => t.tipo === "produto" && t.padrao);
@@ -166,6 +156,11 @@ export default function NovaOSPage() {
 
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
+                toast({
+                    title: "Erro",
+                    description: "Erro ao carregar dados iniciais.",
+                    variant: "destructive",
+                });
             }
         }
         loadData();
@@ -195,7 +190,11 @@ export default function NovaOSPage() {
 
     const adicionarServico = () => {
         if (!novoServico.descricao || novoServico.valor <= 0) {
-            alert("Preencha descrição e valor do serviço");
+            toast({
+                title: "Atenção",
+                description: "Preencha descrição e valor do serviço",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -230,29 +229,16 @@ export default function NovaOSPage() {
         const desconto = parseFloat(formData.valor_desconto) || 0;
         const totalGeral = totalProdutos + totalServicos + frete - desconto;
 
-        let valorParcela = 0;
-        let infoPagamento = "";
-
-        if (formData.forma_pagamento_id) {
-            const forma = formasPagamento.find(f => f.id.toString() === formData.forma_pagamento_id);
-            if (forma) {
-                const numParcelas = parseInt(formData.parcelas) || 1;
-                const taxa = parseFloat(forma.taxa_percentual) || 0;
-                const totalComTaxa = totalGeral * (1 + (taxa / 100));
-                valorParcela = totalComTaxa / numParcelas;
-
-                if (taxa > 0) {
-                    infoPagamento = `(+ ${taxa}% taxa)`;
-                }
-            }
-        }
-
-        return { totalProdutos, totalServicos, frete, desconto, totalGeral, valorParcela, infoPagamento };
+        return { totalProdutos, totalServicos, frete, desconto, totalGeral };
     };
 
     const handleSubmit = async () => {
         if (!formData.cliente_id || !formData.equipamento || !formData.defeito_reclamado) {
-            alert("Preencha os campos obrigatórios: Cliente, Equipamento e Defeito Reclamado");
+            toast({
+                title: "Atenção",
+                description: "Preencha os campos obrigatórios: Cliente, Equipamento e Defeito Reclamado",
+                variant: "destructive",
+            });
             return;
         }
 
@@ -283,7 +269,7 @@ export default function NovaOSPage() {
                 observacoes_cliente: formData.obs_cliente,
                 checklist: checklistData,
                 obs_recebimento: formData.obs_recebimento,
-                forma_pagamento: formData.forma_pagamento_id ? formasPagamento.find(f => f.id.toString() === formData.forma_pagamento_id)?.nome : "",
+                // forma_pagamento removido do payload principal pois agora é via RecebimentoOS
             };
 
             const response = await fetch("http://localhost:8000/api/assistencia/ordens-servico/", {
@@ -295,40 +281,42 @@ export default function NovaOSPage() {
             if (response.ok) {
                 const data = await response.json();
 
-                if (formData.forma_pagamento_id) {
-                    const forma = formasPagamento.find(f => f.id.toString() === formData.forma_pagamento_id);
-                    if (forma) {
-                        const pagamentoPayload = {
-                            ordem_servico: data.id,
-                            forma_pagamento: parseInt(formData.forma_pagamento_id),
-                            valor_original: totais.totalGeral,
-                            valor_liquido: totais.totalGeral,
-                            numero_parcelas: parseInt(formData.parcelas) || 1,
-                        };
-
-                        await fetch("http://localhost:8000/api/financeiro/pagamentos/", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(pagamentoPayload),
-                        });
-                    }
+                // Se houver pagamento selecionado, cria o RecebimentoOS
+                if (pagamentoInfo) {
+                    await api.createRecebimentoOS({
+                        ordem_servico: data.id,
+                        forma_recebimento: pagamentoInfo.formaRecebimentoId,
+                        valor_bruto: pagamentoInfo.valor,
+                        parcelas: pagamentoInfo.parcelas,
+                        data_vencimento: new Date().toISOString().split('T')[0]
+                    });
                 }
 
-                alert("Ordem de Serviço criada com sucesso!");
+                toast({
+                    title: "Sucesso",
+                    description: "Ordem de Serviço criada com sucesso!",
+                });
                 router.push(`/os/${data.id}`);
             } else {
-                alert("Erro ao criar ordem de serviço");
+                toast({
+                    title: "Erro",
+                    description: "Erro ao criar ordem de serviço",
+                    variant: "destructive",
+                });
             }
         } catch (error) {
             console.error("Erro:", error);
-            alert("Erro ao criar ordem de serviço");
+            toast({
+                title: "Erro",
+                description: "Erro ao criar ordem de serviço",
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }
     };
 
     const totais = calcularTotais();
-    const formaPagamentoSelecionada = formasPagamento.find(f => f.id.toString() === formData.forma_pagamento_id);
 
     return (
         <div className="space-y-6">
@@ -871,61 +859,10 @@ export default function NovaOSPage() {
                                     Pagamento
                                 </h4>
 
-                                <div className="space-y-2">
-                                    <Label className="text-xs">Forma de Pagamento</Label>
-                                    <Select
-                                        value={formData.forma_pagamento_id}
-                                        onValueChange={(value) => handleChange("forma_pagamento_id", value)}
-                                    >
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Selecione..." />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {formasPagamento.map((f) => (
-                                                <SelectItem key={f.id} value={f.id.toString()}>
-                                                    {f.nome}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {formaPagamentoSelecionada?.permite_parcelamento && (
-                                    <div className="space-y-2">
-                                        <Label className="text-xs">Parcelas</Label>
-                                        <Select
-                                            value={formData.parcelas}
-                                            onValueChange={(value) => handleChange("parcelas", value)}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {Array.from({ length: formaPagamentoSelecionada.max_parcelas }, (_, i) => i + 1).map((num) => (
-                                                    <SelectItem key={num} value={num.toString()}>
-                                                        {num}x
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-                                )}
-
-                                {formData.forma_pagamento_id && (
-                                    <div className="bg-muted p-3 rounded-md text-sm space-y-1">
-                                        <div className="flex justify-between">
-                                            <span>Parcela:</span>
-                                            <span className="font-medium">
-                                                {formData.parcelas}x de {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totais.valorParcela)}
-                                            </span>
-                                        </div>
-                                        {totais.infoPagamento && (
-                                            <div className="text-xs text-muted-foreground text-right">
-                                                {totais.infoPagamento}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+                                <SeletorPagamento
+                                    valorTotal={totais.totalGeral}
+                                    onChange={setPagamentoInfo}
+                                />
                             </div>
 
                             <Separator />

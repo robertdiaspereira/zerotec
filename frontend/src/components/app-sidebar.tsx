@@ -63,26 +63,27 @@ const menuItems = [
     {
         title: "Estoque",
         icon: Package,
-        items: [
-            { title: "Produtos", href: "/estoque/produtos" },
-            { title: "Ajuste de Estoque", href: "/estoque/movimentacoes" },
-        ],
+        href: "/estoque/produtos",
     },
     {
         title: "Serviços",
         icon: Wrench,
-        items: [
-            { title: "Listagem", href: "/servicos" },
-            { title: "Novo Serviço", href: "/servicos/novo" },
-        ],
+        href: "/servicos",
     },
     {
         title: "Clientes",
         icon: Users,
-        items: [
-            { title: "Listagem", href: "/clientes" },
-            { title: "Novo Cliente", href: "/clientes/novo" },
-        ],
+        href: "/clientes",
+    },
+    {
+        title: "Fornecedores",
+        icon: Users,
+        href: "/fornecedores",
+    },
+    {
+        title: "Compras",
+        icon: ShoppingCart,
+        href: "/compras",
     },
     {
         title: "Assistência Técnica",
@@ -189,7 +190,7 @@ export function AppSidebar() {
                                     ) : (
                                         <SidebarMenuButton
                                             asChild
-                                            isActive={pathname === item.href}
+                                            isActive={pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href + "/"))}
                                         >
                                             <Link href={item.href!}>
                                                 <item.icon className="h-4 w-4" />

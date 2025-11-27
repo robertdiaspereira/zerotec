@@ -9,12 +9,12 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from .models import (
-    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS,
+    OrdemServico, PecaOS, OrcamentoOS, HistoricoOS, RecebimentoOS,
     ServicoTemplate, ChecklistItem, TermoGarantia, OSAnexo, CategoriaServico
 )
 from .serializers import (
     OrdemServicoSerializer, OrdemServicoListSerializer,
-    PecaOSSerializer, OrcamentoOSSerializer, HistoricoOSSerializer,
+    PecaOSSerializer, OrcamentoOSSerializer, HistoricoOSSerializer, RecebimentoOSSerializer,
     ServicoTemplateSerializer, ChecklistItemSerializer,
     TermoGarantiaSerializer, OSAnexoSerializer, CategoriaServicoSerializer
 )
@@ -322,3 +322,55 @@ class OSAnexoViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, DjangoFilterBackend]
     search_fields = ['descricao']
     filterset_fields = ['ordem_servico', 'tipo']
+
+
+class RecebimentoOSViewSet(viewsets.ModelViewSet):
+    """ViewSet for RecebimentoOS"""
+    queryset = RecebimentoOS.objects.select_related('os', 'forma_recebimento').all()
+    serializer_class = RecebimentoOSSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    ordering_fields = ['data_vencimento', 'data_recebimento', 'valor_bruto']
+    filterset_fields = ['os', 'forma_recebimento', 'status', 'parcelas']
+    
+    @action(detail=True, methods=['post'])
+    def confirmar_recebimento(self, request, pk=None):
+        """Confirm payment received"""
+        recebimento = self.get_object()
+        
+        if recebimento.status == 'recebido':
+            return Response(
+                {'error': 'Recebimento já foi confirmado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        data_recebimento = request.data.get('data_recebimento', timezone.now().date())
+        
+        recebimento.data_recebimento = data_recebimento
+        recebimento.status = 'recebido'
+        recebimento.save()
+        
+        return Response({
+            'message': 'Recebimento confirmado com sucesso',
+            'recebimento': RecebimentoOSSerializer(recebimento).data
+        })
+    
+    @action(detail=True, methods=['post'])
+    def cancelar(self, request, pk=None):
+        """Cancel payment"""
+        recebimento = self.get_object()
+        
+        if recebimento.status == 'recebido':
+            return Response(
+                {'error': 'Não é possível cancelar um recebimento já confirmado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        recebimento.status = 'cancelado'
+        recebimento.save()
+        
+        return Response({
+            'message': 'Recebimento cancelado com sucesso',
+            'recebimento': RecebimentoOSSerializer(recebimento).data
+        })
+

@@ -7,6 +7,8 @@ class CoreConfig(AppConfig):
     
     def ready(self):
         """Executado quando o app está pronto"""
+        import apps.core.signals  # noqa
+        
         # Esconder models do Celery do admin
         from django.contrib import admin
         

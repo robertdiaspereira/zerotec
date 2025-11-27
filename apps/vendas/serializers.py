@@ -3,7 +3,7 @@ Serializers for Vendas models
 """
 
 from rest_framework import serializers
-from .models import Venda, ItemVenda, FormaPagamento, PDV, MovimentoPDV
+from .models import Venda, ItemVenda, RecebimentoVenda, PDV, MovimentoPDV
 
 
 class ItemVendaSerializer(serializers.ModelSerializer):
@@ -22,32 +22,40 @@ class ItemVendaSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'preco_total']
 
 
-class FormaPagamentoSerializer(serializers.ModelSerializer):
-    """Serializer for FormaPagamento"""
+class RecebimentoVendaSerializer(serializers.ModelSerializer):
+    """Serializer for RecebimentoVenda"""
     
-    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    forma_recebimento_nome = serializers.CharField(source='forma_recebimento.nome', read_only=True)
+    forma_recebimento_tipo = serializers.CharField(source='forma_recebimento.get_tipo_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
     class Meta:
-        model = FormaPagamento
+        model = RecebimentoVenda
         fields = [
-            'id', 'venda', 'tipo', 'tipo_display', 'valor',
-            'parcelas', 'data_vencimento', 'status', 'status_display'
+            'id', 'venda', 'forma_recebimento', 'forma_recebimento_nome', 
+            'forma_recebimento_tipo', 'valor_bruto', 'taxa_percentual', 'taxa_fixa',
+            'valor_taxa_total', 'valor_liquido', 'parcelas', 'data_vencimento',
+            'data_recebimento', 'data_prevista_recebimento', 'status', 
+            'status_display', 'observacoes'
         ]
-        read_only_fields = ['id']
+        read_only_fields = [
+            'id', 'taxa_percentual', 'taxa_fixa', 'valor_taxa_total', 
+            'valor_liquido', 'data_prevista_recebimento'
+        ]
 
 
 class VendaSerializer(serializers.ModelSerializer):
     """Serializer for Venda"""
     
     itens = ItemVendaSerializer(many=True, read_only=True)
-    pagamentos = FormaPagamentoSerializer(many=True, read_only=True)
+    recebimentos = RecebimentoVendaSerializer(many=True, read_only=True)
     cliente_nome = serializers.CharField(source='cliente.nome_razao_social', read_only=True)
     vendedor_nome = serializers.CharField(source='vendedor.get_full_name', read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     total_itens = serializers.ReadOnlyField()
-    total_pago = serializers.ReadOnlyField()
+    total_recebido = serializers.ReadOnlyField()
+    total_liquido_recebido = serializers.ReadOnlyField()
     saldo_pendente = serializers.ReadOnlyField()
     
     class Meta:
@@ -56,13 +64,14 @@ class VendaSerializer(serializers.ModelSerializer):
             'id', 'numero', 'tipo', 'tipo_display', 'cliente', 'cliente_nome',
             'data_venda', 'data_entrega', 'status', 'status_display',
             'valor_produtos', 'valor_desconto', 'valor_acrescimo', 'valor_total',
-            'vendedor', 'vendedor_nome', 'observacoes', 'itens', 'pagamentos',
-            'total_itens', 'total_pago', 'saldo_pendente', 'active',
-            'created_at', 'updated_at'
+            'vendedor', 'vendedor_nome', 'observacoes', 'itens', 'recebimentos',
+            'total_itens', 'total_recebido', 'total_liquido_recebido', 
+            'saldo_pendente', 'active', 'created_at', 'updated_at'
         ]
         read_only_fields = [
             'id', 'numero', 'data_venda', 'valor_produtos', 'valor_total',
-            'created_at', 'updated_at', 'total_itens', 'total_pago', 'saldo_pendente'
+            'created_at', 'updated_at', 'total_itens', 'total_recebido', 
+            'total_liquido_recebido', 'saldo_pendente'
         ]
     
     def create(self, validated_data):

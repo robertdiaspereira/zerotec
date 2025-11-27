@@ -11,6 +11,7 @@ app_name = 'assistencia'
 router = DefaultRouter()
 router.register(r'os', views.OrdemServicoViewSet, basename='os')
 router.register(r'ordens-servico', views.OrdemServicoViewSet, basename='ordem-servico')
+router.register(r'recebimentos-os', views.RecebimentoOSViewSet, basename='recebimento-os')
 router.register(r'categorias-servico', views.CategoriaServicoViewSet)
 router.register(r'servicos-template', views.ServicoTemplateViewSet)
 router.register(r'checklist-items', views.ChecklistItemViewSet)

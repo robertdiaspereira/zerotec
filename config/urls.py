@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/chatbot/', include('apps.chatbot.urls')),  # Fase 2
     path('api/forum/', include('apps.forum.urls')),  # Fase 3
     path('api/webhooks/', include('apps.integrations.urls')),
+    path('api/core/', include('apps.core.urls')),
 ]
 
 # Serve media files in development

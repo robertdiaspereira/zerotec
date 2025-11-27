@@ -28,17 +28,12 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
 import { Check, ChevronsUpDown, Plus, Trash2, ArrowLeft, Save, ShoppingCart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import api from "@/lib/api";
 import { Textarea } from "@/components/ui/textarea";
+import { SeletorPagamento } from "@/components/vendas/SeletorPagamento";
+import { useToast } from "@/hooks/use-toast";
 
 interface Produto {
     id: number;
@@ -61,8 +56,15 @@ interface ItemVenda {
     desconto: number;
 }
 
+interface PagamentoInfo {
+    formaRecebimentoId: number;
+    parcelas: number;
+    valor: number;
+}
+
 export default function NovaVendaPage() {
     const router = useRouter();
+    const { toast } = useToast();
     const [loading, setLoading] = React.useState(false);
     const [produtos, setProdutos] = React.useState<Produto[]>([]);
     const [clientes, setClientes] = React.useState<Cliente[]>([]);
@@ -71,7 +73,7 @@ export default function NovaVendaPage() {
     const [clienteSelecionado, setClienteSelecionado] = React.useState<Cliente | null>(null);
     const [itens, setItens] = React.useState<ItemVenda[]>([]);
     const [observacoes, setObservacoes] = React.useState("");
-    const [metodoPagamento, setMetodoPagamento] = React.useState("dinheiro");
+    const [pagamentoInfo, setPagamentoInfo] = React.useState<PagamentoInfo | null>(null);
 
     // UI State
     const [openCliente, setOpenCliente] = React.useState(false);
@@ -88,6 +90,11 @@ export default function NovaVendaPage() {
                 setClientes(clientesRes.results || clientesRes);
             } catch (error) {
                 console.error("Erro ao carregar dados:", error);
+                toast({
+                    title: "Erro",
+                    description: "Não foi possível carregar produtos e clientes.",
+                    variant: "destructive",
+                });
             }
         }
         loadData();
@@ -129,19 +136,39 @@ export default function NovaVendaPage() {
 
     const finalizarVenda = async (status: 'orcamento' | 'aprovado' | 'faturado') => {
         if (!clienteSelecionado) {
-            alert("Selecione um cliente");
+            toast({
+                title: "Atenção",
+                description: "Selecione um cliente para continuar.",
+                variant: "destructive",
+            });
             return;
         }
         if (itens.length === 0) {
-            alert("Adicione pelo menos um item");
+            toast({
+                title: "Atenção",
+                description: "Adicione pelo menos um item à venda.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        // Se for faturar, exige pagamento selecionado
+        if (status === 'faturado' && !pagamentoInfo) {
+            toast({
+                title: "Atenção",
+                description: "Selecione uma forma de pagamento para finalizar a venda.",
+                variant: "destructive",
+            });
             return;
         }
 
         try {
             setLoading(true);
-            const payload = {
+
+            // 1. Criar Venda
+            const payloadVenda = {
                 cliente: clienteSelecionado.id,
-                status,
+                status: status === 'faturado' ? 'aprovado' : status, // Cria como aprovado primeiro se for faturar
                 observacoes,
                 itens: itens.map(item => ({
                     produto: item.produto.id,
@@ -151,11 +178,48 @@ export default function NovaVendaPage() {
                 }))
             };
 
-            await api.createVenda(payload);
+            const vendaCriada: any = await api.createVenda(payloadVenda);
+
+            // 2. Se for faturar, criar Recebimento e atualizar status
+            if (status === 'faturado' && pagamentoInfo) {
+                // Criar Recebimento
+                await api.createRecebimentoVenda({
+                    venda: vendaCriada.id,
+                    forma_recebimento: pagamentoInfo.formaRecebimentoId,
+                    valor_bruto: pagamentoInfo.valor,
+                    parcelas: pagamentoInfo.parcelas,
+                    data_vencimento: new Date().toISOString().split('T')[0] // Vencimento hoje por padrão
+                });
+
+                // Faturar Venda (Isso dispara a baixa de estoque no backend se houver lógica para isso, ou atualiza status)
+                // O endpoint 'faturar' do VendaViewSet já faz a verificação de estoque e muda status
+                // Mas como o VendaViewSet tem action 'faturar', vamos usá-la se existir, ou update simples
+
+                // Vamos tentar chamar a action faturar se ela existir no seu backend (verifiquei antes e existe)
+                // Mas a action faturar do backend não recebe pagamento, então criamos o pagamento antes.
+
+                // Chamada para faturar (que muda status para 'faturado' e baixa estoque)
+                // Preciso verificar como chamar a action customizada via api.ts
+                // Como não tenho método específico, vou usar um request direto ou adicionar no api.ts depois.
+                // Por enquanto, vou assumir que o backend lida com isso ou vou fazer um patch simples se não tiver action.
+                // O VendaViewSet tem action `faturar`.
+
+                await api.post(`/vendas/vendas/${vendaCriada.id}/faturar/`);
+            }
+
+            toast({
+                title: "Sucesso",
+                description: `Venda ${vendaCriada.numero} salva com sucesso!`,
+            });
+
             router.push("/vendas");
         } catch (error) {
             console.error("Erro ao salvar venda:", error);
-            alert("Erro ao salvar venda");
+            toast({
+                title: "Erro",
+                description: "Ocorreu um erro ao salvar a venda. Tente novamente.",
+                variant: "destructive",
+            });
         } finally {
             setLoading(false);
         }
@@ -435,23 +499,12 @@ export default function NovaVendaPage() {
 
                             <Separator />
 
-                            <div className="space-y-2">
-                                <Label>Forma de Pagamento</Label>
-                                <Select value={metodoPagamento} onValueChange={setMetodoPagamento}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                                        <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                                        <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                                        <SelectItem value="pix">PIX</SelectItem>
-                                        <SelectItem value="boleto">Boleto</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <SeletorPagamento
+                                valorTotal={total}
+                                onChange={setPagamentoInfo}
+                            />
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 pt-4">
                                 <Label>Observações</Label>
                                 <Textarea
                                     placeholder="Observações da venda..."

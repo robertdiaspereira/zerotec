@@ -86,40 +86,44 @@
   - [ ] Textos padrão para PDFs
   - [ ] Serializer e ViewSet
 
-- [ ] **Modelo de Auditoria/LOG**
-  - [ ] Criar modelo para registro de ações
-  - [ ] Campos: usuário, ação, módulo, descrição, IP, data/hora
-  - [ ] Signal para registrar automaticamente
-  - [ ] Serializer e ViewSet com filtros
+- [x] **Modelo de Auditoria/LOG** ✅ (27/11/2025)
+  - [x] Criar modelo para registro de ações
+  - [x] Campos: usuário, ação, módulo, descrição, IP, data/hora
+  - [x] Signal para registrar automaticamente
+  - [x] Serializer e ViewSet com filtros
 
-- [ ] **Serializers para Recebimentos**
-  - [ ] FormaRecebimentoSerializer
-  - [ ] RecebimentoVendaSerializer
-  - [ ] RecebimentoOSSerializer
-  - [ ] ViewSets e URLs
+- [x] **Serializers para Recebimentos** ✅ (27/11/2025)
+  - [x] FormaRecebimentoSerializer
+  - [x] RecebimentoVendaSerializer
+  - [x] RecebimentoOSSerializer
+  - [x] ViewSets e URLs
+  - [x] Action para calcular taxas em tempo real
 
 ### 2. Frontend - Integrações
-- [ ] **Integrar Formas de Recebimento**
-  - [ ] Página de listagem (/financeiro/formas-recebimento)
-  - [ ] Formulário de cadastro/edição
-  - [ ] Integrar em Nova Venda
-  - [ ] Integrar em Nova OS
-  - [ ] Mostrar cálculo de taxas em tempo real
+- [x] **Integrar Formas de Recebimento** ✅ (27/11/2025)
+- [x] **Integrar Histórico LOG** ✅ (27/11/2025)
+  - [x] Buscar logs da API
+  - [x] Filtros funcionais
+  - [x] Exportação (Visualização em tabela)
 
-- [ ] **Integrar Perfil da Empresa**
-  - [ ] Conectar com API
-  - [ ] Upload de logo funcional
-  - [ ] Salvar configurações
+- [x] **Módulo de Fornecedores** ✅ (27/11/2025)
+  - [x] Página de listagem (`/fornecedores`)
+  - [x] Formulário de cadastro (`/fornecedores/novo`)
+  - [x] Formulário de edição (`/fornecedores/[id]/editar`)
+  - [ ] Página de detalhes com histórico de compras
 
-- [ ] **Integrar Gestão de Usuários**
-  - [ ] CRUD completo de usuários
-  - [ ] Gerenciamento de permissões
-  - [ ] Conectar com API
-
-- [ ] **Integrar Histórico LOG**
-  - [ ] Buscar logs da API
-  - [ ] Filtros funcionais
-  - [ ] Exportação
+- [x] **Módulo de Compras** ✅ (27/11/2025)
+  - [x] Página de listagem de pedidos (`/compras`)
+  - [x] Formulário de nova compra (`/compras/novo`)
+    - [x] Seleção de fornecedor
+    - [x] Adição de produtos ao pedido
+    - [x] Cálculo de totais (produtos + frete - desconto)
+    - [x] Forma de pagamento e condições
+  - [x] Página de detalhes do pedido (`/compras/[id]`)
+  - [x] Recebimento de mercadorias (`/compras/[id]/receber`)
+    - [x] Entrada automática no estoque
+    - [x] Registro de nota fiscal
+    - [x] Conferência de itens
 
 ### 3. Funcionalidades do ERP
 - [x] Dashboard Principal
@@ -227,5 +231,5 @@
 
 ---
 
-**Última Atualização**: 2025-11-26
-**Status**: Sistema de Formas de Recebimento implementado, Configurações reorganizadas, Central de Ajuda completa, Migrations aplicadas.
+**Última Atualização**: 2025-11-27
+**Status**: Frontend de Formas de Recebimento implementado (Listagem, Cadastro, Edição e Calculadora de Taxas). Backend 100% funcional. Próximo passo: Integração em Vendas e OS.

@@ -11,10 +11,10 @@ from django.utils import timezone
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 
-from .models import Venda, ItemVenda, FormaPagamento, PDV, MovimentoPDV
+from .models import Venda, ItemVenda, RecebimentoVenda, PDV, MovimentoPDV
 from .serializers import (
     VendaSerializer, VendaListSerializer, ItemVendaSerializer,
-    FormaPagamentoSerializer, PDVSerializer, PDVListSerializer,
+    RecebimentoVendaSerializer, PDVSerializer, PDVListSerializer,
     MovimentoPDVSerializer
 )
 from apps.erp.models import Produto, Cliente
@@ -449,3 +449,55 @@ class PDVViewSet(viewsets.ModelViewSet):
         movimentos = pdv.movimentos.all()
         
         return Response(MovimentoPDVSerializer(movimentos, many=True).data)
+
+
+class RecebimentoVendaViewSet(viewsets.ModelViewSet):
+    """ViewSet for RecebimentoVenda"""
+    queryset = RecebimentoVenda.objects.select_related('venda', 'forma_recebimento').all()
+    serializer_class = RecebimentoVendaSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [filters.OrderingFilter, DjangoFilterBackend]
+    ordering_fields = ['data_vencimento', 'data_recebimento', 'valor_bruto']
+    filterset_fields = ['venda', 'forma_recebimento', 'status', 'parcelas']
+    
+    @action(detail=True, methods=['post'])
+    def confirmar_recebimento(self, request, pk=None):
+        """Confirm payment received"""
+        recebimento = self.get_object()
+        
+        if recebimento.status == 'recebido':
+            return Response(
+                {'error': 'Recebimento já foi confirmado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        data_recebimento = request.data.get('data_recebimento', timezone.now().date())
+        
+        recebimento.data_recebimento = data_recebimento
+        recebimento.status = 'recebido'
+        recebimento.save()
+        
+        return Response({
+            'message': 'Recebimento confirmado com sucesso',
+            'recebimento': RecebimentoVendaSerializer(recebimento).data
+        })
+    
+    @action(detail=True, methods=['post'])
+    def cancelar(self, request, pk=None):
+        """Cancel payment"""
+        recebimento = self.get_object()
+        
+        if recebimento.status == 'recebido':
+            return Response(
+                {'error': 'Não é possível cancelar um recebimento já confirmado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        recebimento.status = 'cancelado'
+        recebimento.save()
+        
+        return Response({
+            'message': 'Recebimento cancelado com sucesso',
+            'recebimento': RecebimentoVendaSerializer(recebimento).data
+        })
+
