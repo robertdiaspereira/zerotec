@@ -43,13 +43,22 @@ def check_and_fix_admin():
         group_ct = ContentType.objects.get_for_model(Group)
         view_group = Permission.objects.get(content_type=group_ct, codename='view_group')
         
-        if view_group not in group_perms:
-            print("\n   ⚠️ Grupo Administrador NÃO tem permissão view_group!")
-            admin_group.permissions.add(view_group)
-            print("   ✅ Permissão view_group adicionada")
-        else:
-            print("\n   ✅ Grupo Administrador tem permissão view_group")
+        # Verificar permissões de compras
+        print("\n   🔍 Verificando permissões de compras...")
+        compras_perms = Permission.objects.filter(content_type__app_label='compras')
+        for perm in compras_perms:
+            if perm not in group_perms:
+                print(f"      ⚠️ Adicionando permissão {perm.codename} ao grupo Administrador")
+                admin_group.permissions.add(perm)
+            else:
+                print(f"      ✅ Grupo já tem {perm.codename}")
         
+        # Adicionar TODAS as permissões ao grupo Administrador para garantir
+        print("\n   🚀 Adicionando TODAS as permissões ao grupo Administrador...")
+        all_perms = Permission.objects.all()
+        admin_group.permissions.set(all_perms)
+        print("   ✅ Todas as permissões foram atribuídas ao grupo Administrador")
+
         # Tornar admin superuser para garantir acesso total
         if not admin_user.is_superuser:
             print("\n   ⚠️ Admin não é superuser. Tornando superuser...")
