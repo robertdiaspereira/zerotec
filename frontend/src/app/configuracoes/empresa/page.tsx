@@ -40,6 +40,8 @@ export default function EmpresaPage() {
         garantia_servico: ""
     });
 
+    const [errors, setErrors] = React.useState<Record<string, string>>({});
+
     React.useEffect(() => {
         loadData();
     }, []);
@@ -68,13 +70,48 @@ export default function EmpresaPage() {
 
     const handleChange = (field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        // Limpar erro do campo ao editar
+        if (errors[field]) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
+        // Campos obrigatórios
+        if (!formData.razao_social?.trim()) {
+            newErrors.razao_social = "Razão Social é obrigatória";
+        }
+        if (!formData.cnpj?.trim()) {
+            newErrors.cnpj = "CNPJ é obrigatório";
+        }
+        if (!formData.nome_fantasia?.trim()) {
+            newErrors.nome_fantasia = "Nome Fantasia é obrigatório";
+        }
+        if (!formData.telefone?.trim()) {
+            newErrors.telefone = "Telefone é obrigatório";
+        }
+        if (!formData.email?.trim()) {
+            newErrors.email = "E-mail é obrigatório";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+            newErrors.email = "E-mail inválido";
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSave = async () => {
-        if (!formData.razao_social || !formData.cnpj) {
+        if (!validateForm()) {
+            const errorFields = Object.keys(errors).join(", ");
             toast({
                 title: "Atenção",
-                description: "Preencha os campos obrigatórios (Razão Social e CNPJ).",
+                description: `Corrija os seguintes campos: ${errorFields}`,
                 variant: "destructive",
             });
             return;
@@ -87,11 +124,12 @@ export default function EmpresaPage() {
                 title: "Sucesso",
                 description: "Dados da empresa atualizados com sucesso!",
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Erro ao salvar empresa:", error);
+            const errorMessage = error?.response?.data?.message || error?.message || "Erro ao salvar os dados da empresa.";
             toast({
                 title: "Erro",
-                description: "Erro ao salvar os dados da empresa.",
+                description: errorMessage,
                 variant: "destructive",
             });
         } finally {
@@ -157,7 +195,11 @@ export default function EmpresaPage() {
                                         value={formData.razao_social}
                                         onChange={(e) => handleChange("razao_social", e.target.value)}
                                         placeholder="ZEROTEC ASSISTENCIA TECNICA LTDA"
+                                        className={errors.razao_social ? "border-destructive" : ""}
                                     />
+                                    {errors.razao_social && (
+                                        <p className="text-xs text-destructive">{errors.razao_social}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="nome_fantasia">Nome Fantasia *</Label>
@@ -166,7 +208,11 @@ export default function EmpresaPage() {
                                         value={formData.nome_fantasia}
                                         onChange={(e) => handleChange("nome_fantasia", e.target.value)}
                                         placeholder="ZeroTec"
+                                        className={errors.nome_fantasia ? "border-destructive" : ""}
                                     />
+                                    {errors.nome_fantasia && (
+                                        <p className="text-xs text-destructive">{errors.nome_fantasia}</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -178,7 +224,11 @@ export default function EmpresaPage() {
                                         value={formData.cnpj}
                                         onChange={(e) => handleChange("cnpj", e.target.value)}
                                         placeholder="00.000.000/0000-00"
+                                        className={errors.cnpj ? "border-destructive" : ""}
                                     />
+                                    {errors.cnpj && (
+                                        <p className="text-xs text-destructive">{errors.cnpj}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="inscricao_estadual">Inscrição Estadual</Label>
@@ -322,7 +372,11 @@ export default function EmpresaPage() {
                                         value={formData.telefone}
                                         onChange={(e) => handleChange("telefone", e.target.value)}
                                         placeholder="(00) 0000-0000"
+                                        className={errors.telefone ? "border-destructive" : ""}
                                     />
+                                    {errors.telefone && (
+                                        <p className="text-xs text-destructive">{errors.telefone}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="celular">Celular/WhatsApp</Label>
@@ -344,7 +398,11 @@ export default function EmpresaPage() {
                                         value={formData.email}
                                         onChange={(e) => handleChange("email", e.target.value)}
                                         placeholder="contato@empresa.com"
+                                        className={errors.email ? "border-destructive" : ""}
                                     />
+                                    {errors.email && (
+                                        <p className="text-xs text-destructive">{errors.email}</p>
+                                    )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="site">Website</Label>
