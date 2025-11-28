@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 interface AlertData {
     lowStockCount: number;
@@ -30,16 +31,14 @@ export function HeaderAlerts() {
         const fetchAlerts = async () => {
             try {
                 // Fetch Low Stock
-                const stockRes = await fetch("http://localhost:8000/api/erp/produtos/baixo_estoque/");
-                if (stockRes.ok) {
-                    const stockData = await stockRes.json();
+                const stockData: any = await api.getEstoqueBaixo();
+                if (stockData) {
                     setAlerts((prev) => ({ ...prev, lowStockCount: stockData.length }));
                 }
 
                 // Fetch Pending Receivables
-                const receivablesRes = await fetch("http://localhost:8000/api/financeiro/contas-receber/?status=pendente");
-                if (receivablesRes.ok) {
-                    const receivablesData = await receivablesRes.json();
+                const receivablesData: any = await api.getContasReceber({ status: 'pendente' });
+                if (receivablesData) {
                     // Assuming pagination or list
                     const count = Array.isArray(receivablesData) ? receivablesData.length : receivablesData.results?.length || 0;
                     setAlerts((prev) => ({ ...prev, pendingReceivablesCount: count }));
