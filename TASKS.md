@@ -63,18 +63,6 @@
   - [x] Tabela de auditoria completa
   - [x] Exportação de logs
 
-### ✅ Central de Ajuda (26/11/2025)
-- [x] **Página Principal** (/ajuda)
-  - [x] Cards de guias principais
-  - [x] FAQ com perguntas frequentes
-  - [x] Link direto no sidebar (sem submenus)
-
-- [x] **Guias Completos**
-  - [x] Nova Venda (/ajuda/vendas)
-  - [x] Nova OS (/ajuda/os)
-  - [x] Gestão de Estoque (/ajuda/estoque)
-  - [x] Cadastro de Clientes (/ajuda/clientes)
-
 ### ✅ Melhorias de UX e Correções (28/11/2025)
 - [x] **Dashboard - Últimas Movimentações**
   - [x] Adicionada coluna de Status de Pagamento
@@ -82,24 +70,19 @@
   - [x] Melhorada descrição da coluna Data (específica por tipo)
   - [x] Data exibida com label contextual (Venda, Abertura, Pagamento, etc.)
 
-- [x] **Perfil do Usuário**
-  - [x] Corrigido layout duplo na página /configuracoes/usuarios/perfil
-  - [x] Removido header duplicado que causava carregamento infinito
+- [x] **Correções Críticas**
+  - [x] **Logout Inesperado**: Resolvido erro 403 em `header-alerts.tsx` que causava logout ao navegar
+  - [x] **Perfil do Usuário**: Corrigido carregamento infinito (verificação de loading)
+  - [x] **População de Dados**: Banco de dados populado com script `populate_db.py` (Grupos, Usuários, Produtos, etc.)
 
 - [x] **Compras - Nova Compra**
-  - [x] Formas de Pagamento modernizadas
-  - [x] Removido "Cheque"
-  - [x] Adicionado PIX, Cartão de Crédito e Cartão de Débito
-  - [x] Ícones visuais nas opções de pagamento
+  - [x] Formas de Pagamento modernizadas (PIX, Cartão, sem Cheque)
+  - [x] Desconto em Porcentagem implementado (Toggle R$/%)
   - [x] Card Resumo Financeiro redesenhado
-  - [x] Removido "Total Produtos" redundante
-  - [x] Total Geral destacado com fonte maior e cor primária
-  - [x] Cards com border-2 para melhor visibilidade
 
 - [x] **Gestão de Usuários**
-  - [x] Cards de perfis já clicáveis (Administrador, Técnico, Vendedor)
-  - [x] Script create_default_groups.py disponível para criar perfis padrão
-  - [x] Navegação para /configuracoes/usuarios/perfis/[id] implementada
+  - [x] Cards de perfis clicáveis
+  - [x] Perfis padrão criados e verificados no banco
 
 ---
 
