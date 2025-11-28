@@ -2,7 +2,7 @@
 Views for authentication
 """
 
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -125,3 +125,35 @@ def change_password_view(request):
     return Response({
         'message': 'Senha alterada com sucesso!'
     })
+
+
+from django.contrib.auth.models import Group
+from .serializers import GroupSerializer
+
+class UserViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing users and their permissions
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        # Filter users by tenant unless superadmin
+        user = self.request.user
+        if user.is_superadmin:
+            return User.objects.all()
+        return User.objects.filter(tenant=user.tenant)
+    
+    def perform_create(self, serializer):
+        # Set tenant automatically
+        serializer.save(tenant=self.request.user.tenant)
+
+
+class GroupViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing groups (roles)
+    """
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+    permission_classes = [IsAuthenticated]

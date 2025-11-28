@@ -17,3 +17,10 @@ urlpatterns = [
     path('me/update/', views.update_profile_view, name='update_profile'),
     path('change-password/', views.change_password_view, name='change_password'),
 ]
+
+from rest_framework.routers import DefaultRouter
+router = DefaultRouter()
+router.register(r'users', views.UserViewSet, basename='user')
+router.register(r'groups', views.GroupViewSet, basename='group')
+
+urlpatterns += router.urls

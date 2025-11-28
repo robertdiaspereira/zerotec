@@ -55,7 +55,7 @@ TENANT_APPS = [
     'apps.crm',
     'apps.integrations',
     'apps.chatbot',
-
+    'apps.caixa',
 ]
 
 INSTALLED_APPS = list(SHARED_APPS) + [app for app in TENANT_APPS if app not in SHARED_APPS]

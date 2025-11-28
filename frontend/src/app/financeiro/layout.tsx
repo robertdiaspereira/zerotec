@@ -3,8 +3,7 @@
  * Layout with sidebar for financial module
  */
 
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { MainLayout } from "@/components/main-layout";
 
 export default function FinanceiroLayout({
     children,
@@ -12,13 +11,8 @@ export default function FinanceiroLayout({
     children: React.ReactNode;
 }) {
     return (
-        <SidebarProvider>
-            <div className="flex min-h-screen w-full">
-                <AppSidebar />
-                <main className="flex-1 overflow-y-auto bg-background p-6">
-                    {children}
-                </main>
-            </div>
-        </SidebarProvider>
+        <MainLayout breadcrumbs={[{ label: "Financeiro", href: "/financeiro" }]}>
+            {children}
+        </MainLayout>
     );
 }

@@ -75,148 +75,33 @@
   - [x] Gestão de Estoque (/ajuda/estoque)
   - [x] Cadastro de Clientes (/ajuda/clientes)
 
----
+### ✅ Melhorias de UX e Correções (28/11/2025)
+- [x] **Dashboard - Últimas Movimentações**
+  - [x] Adicionada coluna de Status de Pagamento
+  - [x] Removido "N/A" dos campos vazios (detalhes)
+  - [x] Melhorada descrição da coluna Data (específica por tipo)
+  - [x] Data exibida com label contextual (Venda, Abertura, Pagamento, etc.)
 
-## 🎯 Tarefas Pendentes
+- [x] **Perfil do Usuário**
+  - [x] Corrigido layout duplo na página /configuracoes/usuarios/perfil
+  - [x] Removido header duplicado que causava carregamento infinito
 
-### 1. Backend - Modelos Adicionais
-- [ ] **Modelo de Empresa/Perfil**
-  - [ ] Criar modelo para dados da empresa
-  - [ ] Campos para logo, CNPJ, endereço completo
-  - [ ] Textos padrão para PDFs
-  - [ ] Serializer e ViewSet
+- [x] **Compras - Nova Compra**
+  - [x] Formas de Pagamento modernizadas
+  - [x] Removido "Cheque"
+  - [x] Adicionado PIX, Cartão de Crédito e Cartão de Débito
+  - [x] Ícones visuais nas opções de pagamento
+  - [x] Card Resumo Financeiro redesenhado
+  - [x] Removido "Total Produtos" redundante
+  - [x] Total Geral destacado com fonte maior e cor primária
+  - [x] Cards com border-2 para melhor visibilidade
 
-- [x] **Modelo de Auditoria/LOG** ✅ (27/11/2025)
-  - [x] Criar modelo para registro de ações
-  - [x] Campos: usuário, ação, módulo, descrição, IP, data/hora
-  - [x] Signal para registrar automaticamente
-  - [x] Serializer e ViewSet com filtros
-
-- [x] **Serializers para Recebimentos** ✅ (27/11/2025)
-  - [x] FormaRecebimentoSerializer
-  - [x] RecebimentoVendaSerializer
-  - [x] RecebimentoOSSerializer
-  - [x] ViewSets e URLs
-  - [x] Action para calcular taxas em tempo real
-
-### 2. Frontend - Integrações
-- [x] **Integrar Formas de Recebimento** ✅ (27/11/2025)
-- [x] **Integrar Histórico LOG** ✅ (27/11/2025)
-  - [x] Buscar logs da API
-  - [x] Filtros funcionais
-  - [x] Exportação (Visualização em tabela)
-
-- [x] **Módulo de Fornecedores** ✅ (27/11/2025)
-  - [x] Página de listagem (`/fornecedores`)
-  - [x] Formulário de cadastro (`/fornecedores/novo`)
-  - [x] Formulário de edição (`/fornecedores/[id]/editar`)
-  - [ ] Página de detalhes com histórico de compras
-
-- [x] **Módulo de Compras** ✅ (27/11/2025)
-  - [x] Página de listagem de pedidos (`/compras`)
-  - [x] Formulário de nova compra (`/compras/novo`)
-    - [x] Seleção de fornecedor
-    - [x] Adição de produtos ao pedido
-    - [x] Cálculo de totais (produtos + frete - desconto)
-    - [x] Forma de pagamento e condições
-  - [x] Página de detalhes do pedido (`/compras/[id]`)
-  - [x] Recebimento de mercadorias (`/compras/[id]/receber`)
-    - [x] Entrada automática no estoque
-    - [x] Registro de nota fiscal
-    - [x] Conferência de itens
-
-### 3. Funcionalidades do ERP
-- [x] Dashboard Principal
-- [x] Relatório DRE
-- [x] Histórico do Cliente
-- [x] PDV (Ponto de Venda)
-- [x] Sangria de Caixa
-- [ ] Email de boas-vindas
-- [ ] Notificações por WhatsApp
-
-### 4. Separação Produtos/Serviços
-- [x] Backend: Modelo Servico criado
-- [x] Backend: Migração de dados
-- [x] Frontend: Menu Serviços
-- [x] Frontend: Listagem de Serviços
-- [x] Frontend: Cadastro/Edição de Serviços
-- [x] Frontend: Integração em vendas e OS
-
-### 5. Melhorias de UX
-- [ ] Dropdowns com criação dinâmica (+)
-  - [ ] Unidade de Medida
-  - [ ] Categoria
-  - [ ] Tipo de Produto
-  - [ ] Motivo de Ajuste
-  - [ ] Categoria DRE
-  - [ ] Forma de Recebimento
-- [ ] Loading states
-- [ ] Mensagens de erro amigáveis
-- [ ] Confirmações de ações
-- [ ] Feedback visual
-
-### 6. Segurança
-- [ ] Revisar configurações de segurança
-- [ ] Testar proteção CSRF
-- [ ] Testar rate limiting
-- [ ] Revisar permissões de API
-- [ ] Configurar HTTPS para produção
-- [ ] Revisar variáveis de ambiente
-
-### 7. Documentação
-- [ ] Atualizar README.md
-- [ ] Documentar variáveis de ambiente
-- [ ] Criar guia de uso da API
-- [ ] Documentar processo de deploy
-- [ ] Criar changelog atualizado
-
-### 8. Preparação para Deploy
-- [ ] Testar script de backup
-- [ ] Testar script de restore
-- [ ] Configurar variáveis de ambiente para produção
-- [ ] Preparar Dockerfile
-- [ ] Preparar docker-compose.yml
-- [ ] Testar migrations em PostgreSQL local
-- [ ] Criar script de deploy automatizado
-
-### 9. Webhooks (PRIORIDADE BAIXA)
-- [ ] Criar sistema de webhooks
-- [ ] Webhook para nova venda
-- [ ] Webhook para nova OS
-- [ ] Webhook para pagamento recebido
-- [ ] Documentar webhooks disponíveis
-
-### 10. Painel Super Admin (SaaS) (FUTURO)
-- [ ] Dashboard geral (Total de Tenants, Receita Recorrente)
-- [ ] Gestão de Tenants (Criar, Editar, Suspender empresas)
-- [ ] Planos e Assinaturas (Integração com Gateway de Pagamento)
-- [ ] Configurações Globais do SaaS
+- [x] **Gestão de Usuários**
+  - [x] Cards de perfis já clicáveis (Administrador, Técnico, Vendedor)
+  - [x] Script create_default_groups.py disponível para criar perfis padrão
+  - [x] Navegação para /configuracoes/usuarios/perfis/[id] implementada
 
 ---
-
-## 📊 Progresso Geral
-
-### Módulos Implementados (8/8) ✅
-- ✅ ERP (Cadastros Base)
-- ✅ Estoque
-- ✅ Compras
-- ✅ Vendas
-- ✅ Assistência Técnica
-- ✅ Financeiro
-- ✅ CRM
-- ✅ Relatórios
-
-### Funcionalidades Extras
-- ✅ Formas de Recebimento com Taxas
-- ✅ Gestão de Usuários e Permissões
-- ✅ Perfil da Empresa
-- ✅ Histórico LOG/Auditoria
-- ✅ Central de Ajuda
-- ⏳ Exportação PDF/Excel
-- ⏳ Testes Automatizados
-- ⏳ Notificações Email
-- ⏳ Webhooks
-- ✅ Frontend Next.js (Em Desenvolvimento)
 
 ## 📝 Notas
 
@@ -231,5 +116,5 @@
 
 ---
 
-**Última Atualização**: 2025-11-27
-**Status**: Frontend de Formas de Recebimento implementado (Listagem, Cadastro, Edição e Calculadora de Taxas). Backend 100% funcional. Próximo passo: Integração em Vendas e OS.
+**Última Atualização**: 28/11/2025 10:00
+**Status**: Melhorias de UX implementadas. Dashboard com status de pagamento, perfil do usuário corrigido, e formulário de compras modernizado. Próximos passos: Implementar página de edição de perfis de usuário e testar integração completa.

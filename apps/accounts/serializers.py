@@ -9,16 +9,65 @@ from .models import Tenant, Domain
 User = get_user_model()
 
 
+from django.contrib.auth.models import Group
+
+class GroupSerializer(serializers.ModelSerializer):
+    """Serializer for Group model"""
+    can_manage_os = serializers.BooleanField(source='profile.can_manage_os', required=False)
+    can_manage_vendas = serializers.BooleanField(source='profile.can_manage_vendas', required=False)
+    can_manage_compras = serializers.BooleanField(source='profile.can_manage_compras', required=False)
+    can_manage_financeiro = serializers.BooleanField(source='profile.can_manage_financeiro', required=False)
+    can_view_relatorios = serializers.BooleanField(source='profile.can_view_relatorios', required=False)
+
+    class Meta:
+        model = Group
+        fields = [
+            'id', 'name', 
+            'can_manage_os', 'can_manage_vendas', 'can_manage_compras',
+            'can_manage_financeiro', 'can_view_relatorios'
+        ]
+
+    def update(self, instance, validated_data):
+        profile_data = {}
+        # Extract profile fields
+        for field in ['can_manage_os', 'can_manage_vendas', 'can_manage_compras', 'can_manage_financeiro', 'can_view_relatorios']:
+            # Check if field is in validated_data (it comes nested in 'profile' because of source='profile.field')
+            # But DRF with source='profile.field' puts it in validated_data['profile']['field']
+            if 'profile' in validated_data and field in validated_data['profile']:
+                profile_data[field] = validated_data['profile'][field]
+        
+        # Remove profile data from validated_data to avoid errors in super().update
+        if 'profile' in validated_data:
+            del validated_data['profile']
+
+        instance = super().update(instance, validated_data)
+        
+        # Update or create profile
+        if profile_data:
+            from .models import GroupProfile
+            GroupProfile.objects.update_or_create(group=instance, defaults=profile_data)
+            
+        return instance
+
+
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model"""
+    groups = GroupSerializer(many=True, read_only=True)
+    group_ids = serializers.PrimaryKeyRelatedField(
+        source='groups', 
+        queryset=Group.objects.all(), 
+        many=True, 
+        write_only=True,
+        required=False
+    )
     
     class Meta:
         model = User
         fields = [
             'id', 'username', 'email', 'first_name', 'last_name',
-            'phone', 'is_superadmin', 'tenant',
+            'phone', 'is_superadmin', 'tenant', 'groups', 'group_ids',
             'can_manage_os', 'can_manage_vendas', 'can_manage_compras',
-            'can_manage_financeiro', 'can_view_relatorios',
+            'can_manage_financeiro', 'can_view_relatorios', 'is_active',
             'date_joined', 'last_login'
         ]
         read_only_fields = ['id', 'date_joined', 'last_login', 'is_superadmin']

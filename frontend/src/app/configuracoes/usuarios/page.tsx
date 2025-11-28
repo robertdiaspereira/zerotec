@@ -1,10 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Shield, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Plus, Edit, Trash2, Shield, ShieldCheck, ShieldAlert, Loader2 } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -13,57 +15,77 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useToast } from "@/hooks/use-toast";
+
+interface User {
+    id: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    groups: { id: number; name: string }[];
+    is_active: boolean;
+    last_login: string | null;
+}
 
 export default function UsuariosPage() {
-    // Mock data - substituir por dados reais da API
-    const usuarios = [
-        {
-            id: 1,
-            nome: "Admin Sistema",
-            email: "admin@zerotec.com",
-            role: "admin",
-            ativo: true,
-            ultimo_acesso: "2025-11-26 17:30:00"
-        },
-        {
-            id: 2,
-            nome: "João Silva",
-            email: "joao@zerotec.com",
-            role: "tecnico",
-            ativo: true,
-            ultimo_acesso: "2025-11-26 15:20:00"
-        },
-        {
-            id: 3,
-            nome: "Maria Santos",
-            email: "maria@zerotec.com",
-            role: "vendedor",
-            ativo: true,
-            ultimo_acesso: "2025-11-25 18:45:00"
-        },
-    ];
+    const router = useRouter();
+    const { toast } = useToast();
+    const [usuarios, setUsuarios] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const getRoleIcon = (role: string) => {
-        switch (role) {
-            case "admin":
-                return <ShieldCheck className="h-4 w-4 text-red-500" />;
-            case "tecnico":
-                return <Shield className="h-4 w-4 text-blue-500" />;
-            default:
-                return <ShieldAlert className="h-4 w-4 text-gray-500" />;
+    useEffect(() => {
+        loadUsuarios();
+    }, []);
+
+    const loadUsuarios = async () => {
+        try {
+            setLoading(true);
+            const data: any = await api.getUsers();
+            setUsuarios(data.results || data);
+        } catch (error) {
+            console.error("Erro ao carregar usuários:", error);
+            toast({
+                title: "Erro",
+                description: "Não foi possível carregar a lista de usuários.",
+                variant: "destructive",
+            });
+        } finally {
+            setLoading(false);
         }
     };
 
-    const getRoleBadge = (role: string) => {
-        const variants: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-            admin: { label: "Administrador", variant: "destructive" },
-            tecnico: { label: "Técnico", variant: "default" },
-            vendedor: { label: "Vendedor", variant: "secondary" },
-        };
+    const getRoleIcon = (groups: { name: string }[]) => {
+        if (!groups || groups.length === 0) return <ShieldAlert className="h-4 w-4 text-gray-500" />;
 
-        const config = variants[role] || { label: role, variant: "outline" };
-        return <Badge variant={config.variant}>{config.label}</Badge>;
+        const role = groups[0].name.toLowerCase();
+        if (role.includes('admin')) return <ShieldCheck className="h-4 w-4 text-red-500" />;
+        if (role.includes('técnico') || role.includes('tecnico')) return <Shield className="h-4 w-4 text-blue-500" />;
+        return <ShieldAlert className="h-4 w-4 text-gray-500" />;
     };
+
+    const getRoleBadge = (groups: { name: string }[]) => {
+        if (!groups || groups.length === 0) return <Badge variant="outline">Sem Perfil</Badge>;
+
+        const roleName = groups[0].name;
+        const role = roleName.toLowerCase();
+
+        let variant: "default" | "secondary" | "destructive" | "outline" = "outline";
+
+        if (role.includes('admin')) variant = "destructive";
+        else if (role.includes('técnico') || role.includes('tecnico')) variant = "default";
+        else if (role.includes('vendedor')) variant = "secondary";
+
+        return <Badge variant={variant}>{roleName}</Badge>;
+    };
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -74,7 +96,7 @@ export default function UsuariosPage() {
                         Gerencie usuários e suas permissões no sistema
                     </p>
                 </div>
-                <Button>
+                <Button onClick={() => router.push('/configuracoes/usuarios/novo')}>
                     <Plus className="mr-2 h-4 w-4" />
                     Novo Usuário
                 </Button>
@@ -100,36 +122,47 @@ export default function UsuariosPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {usuarios.map((usuario) => (
-                                <TableRow key={usuario.id}>
-                                    <TableCell className="font-medium">
-                                        <div className="flex items-center gap-2">
-                                            {getRoleIcon(usuario.role)}
-                                            {usuario.nome}
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{usuario.email}</TableCell>
-                                    <TableCell>{getRoleBadge(usuario.role)}</TableCell>
-                                    <TableCell>
-                                        <Badge variant={usuario.ativo ? "default" : "secondary"}>
-                                            {usuario.ativo ? "Ativo" : "Inativo"}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-sm text-muted-foreground">
-                                        {new Date(usuario.ultimo_acesso).toLocaleString("pt-BR")}
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <Button variant="ghost" size="icon">
-                                                <Edit className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon">
-                                                <Trash2 className="h-4 w-4 text-destructive" />
-                                            </Button>
-                                        </div>
+                            {usuarios.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                        Nenhum usuário encontrado.
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ) : (
+                                usuarios.map((usuario) => (
+                                    <TableRow key={usuario.id}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex items-center gap-2">
+                                                {getRoleIcon(usuario.groups)}
+                                                {usuario.first_name ? `${usuario.first_name} ${usuario.last_name}` : usuario.username}
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{usuario.email}</TableCell>
+                                        <TableCell>{getRoleBadge(usuario.groups)}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={usuario.is_active ? "default" : "secondary"}>
+                                                {usuario.is_active ? "Ativo" : "Inativo"}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {usuario.last_login
+                                                ? new Date(usuario.last_login).toLocaleString("pt-BR")
+                                                : "Nunca acessou"}
+                                        </TableCell>
+                                        <TableCell className="text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => router.push(`/configuracoes/usuarios/${usuario.id}`)}
+                                                >
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
@@ -146,7 +179,10 @@ export default function UsuariosPage() {
                 <CardContent>
                     <div className="space-y-4">
                         <div className="grid gap-4 md:grid-cols-3">
-                            <Card>
+                            <Card
+                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => router.push('/configuracoes/usuarios/perfis/1')} // Assuming Admin is ID 1
+                            >
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
                                         <ShieldCheck className="h-5 w-5 text-red-500" />
@@ -163,7 +199,10 @@ export default function UsuariosPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card
+                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => router.push('/configuracoes/usuarios/perfis/2')} // Assuming Técnico is ID 2
+                            >
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
                                         <Shield className="h-5 w-5 text-blue-500" />
@@ -180,7 +219,10 @@ export default function UsuariosPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card>
+                            <Card
+                                className="cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => router.push('/configuracoes/usuarios/perfis/3')} // Assuming Vendedor is ID 3
+                            >
                                 <CardHeader className="pb-3">
                                     <div className="flex items-center gap-2">
                                         <ShieldAlert className="h-5 w-5 text-gray-500" />

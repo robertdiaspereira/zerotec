@@ -1,22 +1,9 @@
-/**
- * Dashboard Page
- * Main dashboard with KPIs, charts and recent activities
- */
-
 "use client";
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-    DollarSign,
-    ShoppingCart,
-    Wrench,
-    TrendingUp,
-    TrendingDown,
-    ArrowUpRight,
-    ArrowDownRight,
-} from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/lib/api";
@@ -39,14 +26,10 @@ export default function DashboardPage() {
                 setLoading(false);
             }
         }
-
         fetchDashboard();
     }, []);
 
-    if (loading) {
-        return <DashboardSkeleton />;
-    }
-
+    if (loading) return <DashboardSkeleton />;
     if (error) {
         return (
             <div className="flex h-[400px] items-center justify-center">
@@ -57,394 +40,250 @@ export default function DashboardPage() {
             </div>
         );
     }
-
-    if (!data) {
-        return null;
-    }
+    if (!data) return null;
 
     const { kpis, graficos, ultimas_movimentacoes } = data;
 
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-                <p className="text-muted-foreground">
-                    Visão geral do seu negócio
-                </p>
-            </div>
-
-            {/* KPIs */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {/* Vendas do Mês */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Vendas do Mês</CardTitle>
-                        <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            }).format(kpis.vendas_mes.total)}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{kpis.vendas_mes.quantidade} vendas</span>
-                            <span>•</span>
-                            <span>
-                                Ticket médio:{" "}
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.vendas_mes.ticket_medio)}
-                            </span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-1">
-                            {kpis.vendas_mes.variacao >= 0 ? (
-                                <>
-                                    <ArrowUpRight className="h-4 w-4 text-green-600" />
-                                    <span className="text-xs font-medium text-green-600">
-                                        +{kpis.vendas_mes.variacao.toFixed(1)}%
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    <ArrowDownRight className="h-4 w-4 text-red-600" />
-                                    <span className="text-xs font-medium text-red-600">
-                                        {kpis.vendas_mes.variacao.toFixed(1)}%
-                                    </span>
-                                </>
-                            )}
-                            <span className="text-xs text-muted-foreground">vs mês anterior</span>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Ordens de Serviço */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Ordens de Serviço</CardTitle>
-                        <Wrench className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            }).format(kpis.os_mes.total)}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{kpis.os_mes.quantidade} OS</span>
-                        </div>
-                        <div className="mt-2 flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">
-                                {kpis.os_mes.abertas} abertas
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs">
-                                {kpis.os_mes.concluidas} concluídas
-                            </Badge>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* Financeiro */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Saldo do Mês</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            }).format(kpis.financeiro_mes.saldo)}
-                        </div>
-                        <div className="mt-2 space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">A Receber</span>
-                                <span className="font-medium text-green-600">
-                                    {new Intl.NumberFormat("pt-BR", {
-                                        style: "currency",
-                                        currency: "BRL",
-                                    }).format(kpis.financeiro_mes.receber)}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-muted-foreground">A Pagar</span>
-                                <span className="font-medium text-red-600">
-                                    {new Intl.NumberFormat("pt-BR", {
-                                        style: "currency",
-                                        currency: "BRL",
-                                    }).format(kpis.financeiro_mes.pagar)}
-                                </span>
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Financial Cards - Contas a Receber e Pagar */}
-            <div className="grid gap-4 md:grid-cols-2">
-                {/* Contas a Receber */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg font-semibold">A Receber</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=hoje"
-                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm text-muted-foreground">Hoje:</span>
-                            <span className="text-sm font-medium">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_receber?.hoje || 0)}
-                            </span>
-                        </Link>
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=restante_mes"
-                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm text-muted-foreground">Restante do mês:</span>
-                            <span className="text-sm font-medium">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_receber?.restante_mes || 0)}
-                            </span>
-                        </Link>
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=receber&filtro=atrasadas"
-                            className="flex items-center justify-between border-t pt-3 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm font-semibold text-destructive">Em Atraso:</span>
-                            <span className="text-sm font-bold text-destructive">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_receber?.atrasadas || 0)}
-                            </span>
-                        </Link>
-                    </CardContent>
-                </Card>
-
-                {/* Contas a Pagar */}
-                <Card>
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-lg font-semibold">A Pagar</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=hoje"
-                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm text-muted-foreground">Hoje:</span>
-                            <span className="text-sm font-medium">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_pagar?.hoje || 0)}
-                            </span>
-                        </Link>
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=restante_mes"
-                            className="flex items-center justify-between hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm text-muted-foreground">Restante do mês:</span>
-                            <span className="text-sm font-medium">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_pagar?.restante_mes || 0)}
-                            </span>
-                        </Link>
-                        <Link
-                            href="/financeiro/fluxo-caixa?tipo=pagar&filtro=atrasadas"
-                            className="flex items-center justify-between border-t pt-3 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                        >
-                            <span className="text-sm font-semibold text-destructive">Em Atraso:</span>
-                            <span className="text-sm font-bold text-destructive">
-                                {new Intl.NumberFormat("pt-BR", {
-                                    style: "currency",
-                                    currency: "BRL",
-                                }).format(kpis.contas_pagar?.atrasadas || 0)}
-                            </span>
-                        </Link>
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Charts and Recent Activity */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                {/* Charts */}
-                <Card className="col-span-4">
+            <div className="grid gap-4 lg:grid-cols-3">
+                <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Visão Anual</CardTitle>
+                        <CardTitle>Visão Anual - {new Date().getFullYear()}</CardTitle>
+                        <p className="text-sm text-muted-foreground">Receitas e custos mensais</p>
                     </CardHeader>
                     <CardContent>
-                        <Tabs defaultValue="vendas" className="space-y-4">
-                            <TabsList>
-                                <TabsTrigger value="vendas">Vendas</TabsTrigger>
-                                <TabsTrigger value="custos">Custos</TabsTrigger>
-                                <TabsTrigger value="os">Ordens de Serviço</TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="vendas" className="space-y-4">
-                                <SimpleBarChart
-                                    data={graficos.vendas_ano}
-                                    label="Vendas"
-                                    color="hsl(var(--primary))"
-                                />
-                            </TabsContent>
-                            <TabsContent value="custos" className="space-y-4">
-                                <SimpleBarChart
-                                    data={graficos.custos_ano}
-                                    label="Custos"
-                                    color="hsl(var(--destructive))"
-                                />
-                            </TabsContent>
-                            <TabsContent value="os" className="space-y-4">
-                                <SimpleBarChart
-                                    data={graficos.os_ano.map((item) => ({
-                                        mes: item.mes,
-                                        valor: item.quantidade,
-                                    }))}
-                                    label="OS"
-                                    color="hsl(var(--chart-2))"
-                                />
-                            </TabsContent>
-                        </Tabs>
+                        <FinancialChart meses={graficos.meses} vendas={graficos.vendas} servicos={graficos.servicos} custos={graficos.custos} />
                     </CardContent>
                 </Card>
 
-                {/* Recent Activity */}
-                <Card className="col-span-3">
-                    <CardHeader>
-                        <CardTitle>Últimas Movimentações</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
+                <div className="flex flex-col gap-4 h-full">
+                    <Card className="flex-1 flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                <TrendingUp className="h-5 w-5 text-muted-foreground" />
+                                A Receber
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col justify-around space-y-4">
+                            <Link href="/financeiro/fluxo-caixa?tipo=receber&filtro=hoje" className="flex items-center justify-between hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm text-muted-foreground">Hoje:</span>
+                                <span className="text-base font-bold text-green-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_receber?.hoje || 0)}</span>
+                            </Link>
+                            <Link href="/financeiro/fluxo-caixa?tipo=receber&filtro=mes" className="flex items-center justify-between hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm text-muted-foreground">Restante do mês:</span>
+                                <span className="text-base font-bold text-orange-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_receber?.restante_mes || 0)}</span>
+                            </Link>
+                            <Link href="/financeiro/fluxo-caixa?tipo=receber&filtro=atrasadas" className="flex items-center justify-between pt-4 border-t hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm font-medium text-muted-foreground">Atrasadas:</span>
+                                <span className="text-base font-bold text-red-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_receber?.atrasadas || 0)}</span>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="flex-1 flex flex-col">
+                        <CardHeader className="pb-4">
+                            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                <TrendingDown className="h-5 w-5 text-muted-foreground" />
+                                A Pagar
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col justify-around space-y-4">
+                            <Link href="/financeiro/fluxo-caixa?tipo=pagar&filtro=hoje" className="flex items-center justify-between hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm text-muted-foreground">Hoje:</span>
+                                <span className="text-base font-bold text-green-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_pagar?.hoje || 0)}</span>
+                            </Link>
+                            <Link href="/financeiro/fluxo-caixa?tipo=pagar&filtro=mes" className="flex items-center justify-between hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm text-muted-foreground">Restante do mês:</span>
+                                <span className="text-base font-bold text-orange-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_pagar?.restante_mes || 0)}</span>
+                            </Link>
+                            <Link href="/financeiro/fluxo-caixa?tipo=pagar&filtro=atrasadas" className="flex items-center justify-between pt-4 border-t hover:bg-accent/50 rounded-md p-3 -m-3 transition-colors cursor-pointer">
+                                <span className="text-sm font-medium text-muted-foreground">Atrasadas:</span>
+                                <span className="text-base font-bold text-red-600">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(kpis.contas_pagar?.atrasadas || 0)}</span>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <Card>
+                <CardHeader className="text-center pb-4 border-b">
+                    <CardTitle className="text-2xl font-semibold">Últimas Movimentações</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[280px]">Descrição</TableHead>
+                                <TableHead>Detalhes</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Pagamento</TableHead>
+                                <TableHead className="text-right">Valor</TableHead>
+                                <TableHead className="text-right">Data</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {ultimas_movimentacoes.map((mov) => {
-                                // Generate link based on movement type
-                                const getMovementLink = () => {
+                                const getLink = () => {
                                     switch (mov.tipo) {
-                                        case 'venda':
-                                            return `/vendas/${mov.id}`;
-                                        case 'os':
-                                            return `/os/${mov.id}`;
+                                        case 'venda': return `/vendas/${mov.id}`;
+                                        case 'os': return `/os/${mov.id}`;
                                         case 'pagamento':
-                                            return `/financeiro/contas-pagar`;
-                                        case 'recebimento':
-                                            return `/financeiro/contas-receber`;
-                                        default:
-                                            return '#';
+                                        case 'compra': return `/financeiro/contas-pagar`;
+                                        case 'recebimento': return `/financeiro/contas-receber`;
+                                        default: return '#';
+                                    }
+                                };
+
+                                const getStatusVariant = (status: string | undefined) => {
+                                    const s = (status || '').toLowerCase();
+                                    if (['pago', 'recebido', 'concluído', 'finalizado', 'entregue'].includes(s)) return 'default';
+                                    if (['pendente', 'aberto', 'em andamento', 'aguardando'].includes(s)) return 'secondary';
+                                    if (['cancelado', 'atrasado'].includes(s)) return 'destructive';
+                                    return 'outline';
+                                };
+
+                                const getPaymentStatusVariant = (status: string | undefined) => {
+                                    const s = (status || '').toLowerCase();
+                                    if (['pago', 'recebido'].includes(s)) return 'default';
+                                    if (['pendente', 'parcial'].includes(s)) return 'secondary';
+                                    if (['atrasado', 'vencido'].includes(s)) return 'destructive';
+                                    return 'outline';
+                                };
+
+                                const getDataLabel = () => {
+                                    switch (mov.tipo) {
+                                        case 'venda': return 'Venda';
+                                        case 'os': return 'Abertura';
+                                        case 'pagamento': return 'Pagamento';
+                                        case 'recebimento': return 'Recebimento';
+                                        case 'compra': return 'Pedido';
+                                        default: return 'Data';
                                     }
                                 };
 
                                 return (
-                                    <Link
-                                        key={mov.id}
-                                        href={getMovementLink()}
-                                        className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0 hover:bg-accent/50 rounded-md p-2 -m-2 transition-colors"
-                                    >
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium leading-none">
-                                                {mov.descricao}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(mov.data).toLocaleDateString("pt-BR")}
-                                            </p>
-                                        </div>
-                                        <div className="text-sm font-medium">
-                                            {new Intl.NumberFormat("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                            }).format(mov.valor)}
-                                        </div>
-                                    </Link>
+                                    <TableRow key={`${mov.tipo}-${mov.id}`}>
+                                        <TableCell className="font-medium">
+                                            <div className="flex flex-col">
+                                                <Link href={getLink()} className="hover:underline">{mov.descricao}</Link>
+                                                <span className="text-xs text-muted-foreground capitalize">{mov.tipo}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="text-sm text-muted-foreground">
+                                            {mov.detalhes || ''}
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={getStatusVariant(mov.status)} className="capitalize">
+                                                {mov.status || 'Pendente'}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {mov.status_pagamento && (
+                                                <Badge variant={getPaymentStatusVariant(mov.status_pagamento)} className="capitalize">
+                                                    {mov.status_pagamento}
+                                                </Badge>
+                                            )}
+                                        </TableCell>
+                                        <TableCell className="text-right font-medium">
+                                            <span className={mov.tipo === 'pagamento' || mov.tipo === 'compra' ? 'text-red-600' : 'text-green-600'}>
+                                                {mov.tipo === 'pagamento' || mov.tipo === 'compra' ? '-' : '+'}
+                                                {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(mov.valor)}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="text-right text-sm">
+                                            <div className="flex flex-col items-end">
+                                                <span className="text-muted-foreground">{new Date(mov.data).toLocaleDateString("pt-BR")}</span>
+                                                <span className="text-xs text-muted-foreground/70">{getDataLabel()}</span>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         </div>
     );
 }
 
-// Simple Bar Chart Component
-function SimpleBarChart({
-    data,
-    label,
-    color,
-}: {
-    data: Array<{ mes: number; valor: number }>;
-    label: string;
-    color: string;
-}) {
-    const maxValue = Math.max(...data.map((d) => d.valor));
-    const meses = [
-        "Jan",
-        "Fev",
-        "Mar",
-        "Abr",
-        "Mai",
-        "Jun",
-        "Jul",
-        "Ago",
-        "Set",
-        "Out",
-        "Nov",
-        "Dez",
-    ];
+function FinancialChart({ meses, vendas, servicos, custos }: { meses: string[]; vendas: number[]; servicos: number[]; custos: number[] }) {
+    const [visible, setVisible] = React.useState({ vendas: true, servicos: true, custos: true });
+    const [hovered, setHovered] = React.useState<number | null>(null);
+
+    const toggle = (s: keyof typeof visible) => setVisible(p => ({ ...p, [s]: !p[s] }));
+    const maxVal = Math.max(...meses.map((_, i) => (visible.vendas ? vendas[i] : 0) + (visible.servicos ? servicos[i] : 0) + (visible.custos ? custos[i] : 0)), 1);
+    const yLabels = Array.from({ length: 5 }, (_, i) => (maxVal / 4) * (4 - i));
 
     return (
-        <div className="space-y-2">
-            <div className="flex h-[200px] items-end gap-2">
-                {data.map((item) => (
-                    <div key={item.mes} className="flex flex-1 flex-col items-center gap-1">
-                        <div className="relative w-full">
-                            <div
-                                className="w-full rounded-t transition-all hover:opacity-80"
-                                style={{
-                                    height: `${(item.valor / maxValue) * 180}px`,
-                                    backgroundColor: color,
-                                    minHeight: "4px",
-                                }}
-                            />
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                            {meses[item.mes - 1]}
-                        </span>
+        <div className="space-y-3">
+            <div className="relative h-[320px] w-full flex gap-2">
+                <div className="flex flex-col justify-between py-2 text-xs text-muted-foreground w-16 text-right">
+                    {yLabels.map((v, i) => <span key={i}>{new Intl.NumberFormat("pt-BR", { notation: "compact" }).format(v)}</span>)}
+                </div>
+                <div className="relative flex-1">
+                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+                        {yLabels.map((_, i) => <line key={i} x1="0" y1={(100 / 4) * i} x2="100" y2={(100 / 4) * i} stroke="currentColor" strokeWidth="0.2" className="text-muted-foreground/20" />)}
+                        {visible.custos && <AreaPath data={custos} max={maxVal} color="rgb(220 38 38)" />}
+                        {visible.servicos && <AreaPath data={servicos} max={maxVal} color="rgb(234 88 12)" />}
+                        {visible.vendas && <AreaPath data={vendas} max={maxVal} color="rgb(22 163 74)" />}
+                    </svg>
+                    <div className="absolute inset-0 flex">
+                        {meses.map((m, i) => (
+                            <div key={m} className="flex-1 relative cursor-pointer" onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}>
+                                {hovered === i && (
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-popover text-popover-foreground p-3 rounded-lg border shadow-lg z-10 min-w-[180px]">
+                                        <p className="font-bold text-sm mb-2">{m}</p>
+                                        {visible.vendas && <div className="flex items-center justify-between gap-4 text-xs mb-1"><span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-green-600" />Vendas:</span><span className="font-semibold">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 }).format(vendas[i])}</span></div>}
+                                        {visible.servicos && <div className="flex items-center justify-between gap-4 text-xs mb-1"><span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-orange-600" />Serviços:</span><span className="font-semibold">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 }).format(servicos[i])}</span></div>}
+                                        {visible.custos && <div className="flex items-center justify-between gap-4 text-xs"><span className="flex items-center gap-1"><div className="h-2 w-2 rounded-full bg-red-600" />Custos:</span><span className="font-semibold">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 }).format(custos[i])}</span></div>}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
-                ))}
+                    <div className="absolute bottom-0 left-0 right-0 flex justify-between px-1">
+                        {meses.map(m => <span key={m} className="text-[10px] text-muted-foreground">{m}</span>)}
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-6 text-sm pt-2 border-t">
+                <button onClick={() => toggle('vendas')} className={`flex items-center gap-2 transition-opacity ${visible.vendas ? 'opacity-100' : 'opacity-40'} hover:opacity-100`}>
+                    <div className="h-3 w-3 rounded-full bg-green-600" /><span className="font-medium">Receitas (Vendas)</span>
+                </button>
+                <button onClick={() => toggle('servicos')} className={`flex items-center gap-2 transition-opacity ${visible.servicos ? 'opacity-100' : 'opacity-40'} hover:opacity-100`}>
+                    <div className="h-3 w-3 rounded-full bg-orange-600" /><span className="font-medium">Receitas (Serviços)</span>
+                </button>
+                <button onClick={() => toggle('custos')} className={`flex items-center gap-2 transition-opacity ${visible.custos ? 'opacity-100' : 'opacity-40'} hover:opacity-100`}>
+                    <div className="h-3 w-3 rounded-full bg-red-600" /><span className="font-medium">Custos (Produtos)</span>
+                </button>
             </div>
         </div>
     );
 }
 
-// Loading Skeleton
+function AreaPath({ data, max, color }: { data: number[]; max: number; color: string }) {
+    const w = 100, h = 100, step = w / (data.length - 1);
+    let path = `M 0 ${h}`;
+    data.forEach((v, i) => {
+        const x = i * step, y = h - (v / max) * h;
+        path += ` L ${x} ${y}`;
+    });
+    path += ` L ${w} ${h} Z`;
+    return <path d={path} fill={color} opacity="0.6" />;
+}
+
 function DashboardSkeleton() {
     return (
         <div className="space-y-6">
-            <div>
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="mt-2 h-4 w-64" />
+            <div className="grid gap-4 lg:grid-cols-3">
+                <Card className="lg:col-span-2"><CardHeader><Skeleton className="h-6 w-48" /></CardHeader><CardContent><Skeleton className="h-[280px] w-full" /></CardContent></Card>
+                <div className="space-y-4"><Skeleton className="h-[180px] w-full" /><Skeleton className="h-[180px] w-full" /></div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                    <Card key={i}>
-                        <CardHeader>
-                            <Skeleton className="h-4 w-32" />
-                        </CardHeader>
-                        <CardContent>
-                            <Skeleton className="h-8 w-40" />
-                            <Skeleton className="mt-2 h-3 w-full" />
-                        </CardContent>
-                    </Card>
-                ))}
+            <div className="grid gap-4 md:grid-cols-3">
+                {[1, 2, 3].map(i => <Card key={i}><CardHeader><Skeleton className="h-4 w-32" /></CardHeader><CardContent><Skeleton className="h-8 w-40" /></CardContent></Card>)}
             </div>
         </div>
     );

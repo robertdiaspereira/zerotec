@@ -47,6 +47,7 @@ import {
     CheckCircle2,
     AlertCircle,
     XCircle,
+    Settings,
 } from "lucide-react";
 
 interface OrdemServico {
@@ -77,7 +78,7 @@ export default function OSPage() {
         async function fetchOrdens() {
             try {
                 setLoading(true);
-                const response = await fetch("http://localhost:8000/api/assistencia/ordens-servico/");
+                const response = await fetch("http://localhost:8000/api/os/ordens-servico/");
                 const data = await response.json();
                 setOrdens(Array.isArray(data) ? data : (data.results || []));
             } catch (error) {
@@ -180,12 +181,20 @@ export default function OSPage() {
                         Gerencie as ordens de serviço da assistência técnica
                     </p>
                 </div>
-                <Link href="/os/nova">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Nova OS
-                    </Button>
-                </Link>
+                <div className="flex gap-2">
+                    <Link href="/os/nova">
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Nova OS
+                        </Button>
+                    </Link>
+                    <Link href="/configuracoes/os">
+                        <Button variant="outline">
+                            <Settings className="mr-2 h-4 w-4" />
+                            Configuração OS
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* Cards de Resumo */}

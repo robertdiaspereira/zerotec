@@ -414,24 +414,14 @@ export default function NovaCompraPage() {
                 {/* Sidebar - Resumo e Pagamento */}
                 <div className="space-y-6">
                     {/* Resumo Financeiro */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Resumo Financeiro</CardTitle>
+                    <Card className="border-2">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg">Resumo Financeiro</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Total Produtos</span>
-                                    <span className="font-medium">
-                                        {new Intl.NumberFormat("pt-BR", {
-                                            style: "currency",
-                                            currency: "BRL",
-                                        }).format(totalProdutos)}
-                                    </span>
-                                </div>
-
+                            <div className="space-y-3">
                                 <div className="space-y-2">
-                                    <Label htmlFor="frete">Frete</Label>
+                                    <Label htmlFor="frete" className="text-sm">Frete</Label>
                                     <Input
                                         id="frete"
                                         type="number"
@@ -443,7 +433,7 @@ export default function NovaCompraPage() {
                                 </div>
 
                                 <div className="space-y-2">
-                                    <Label htmlFor="desconto">Desconto</Label>
+                                    <Label htmlFor="desconto" className="text-sm">Desconto</Label>
                                     <Input
                                         id="desconto"
                                         type="number"
@@ -454,10 +444,10 @@ export default function NovaCompraPage() {
                                     />
                                 </div>
 
-                                <div className="pt-4 border-t">
-                                    <div className="flex justify-between text-lg font-bold">
-                                        <span>Total Geral</span>
-                                        <span>
+                                <div className="pt-4 border-t-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg font-semibold">Total Geral</span>
+                                        <span className="text-2xl font-bold text-primary">
                                             {new Intl.NumberFormat("pt-BR", {
                                                 style: "currency",
                                                 currency: "BRL",
@@ -470,26 +460,27 @@ export default function NovaCompraPage() {
                     </Card>
 
                     {/* Pagamento */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Pagamento</CardTitle>
+                    <Card className="border-2">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-lg">Pagamento</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="forma_pagamento">Forma de Pagamento</Label>
+                                <Label htmlFor="forma_pagamento" className="text-sm font-medium">Forma de Pagamento</Label>
                                 <Select
                                     value={formData.forma_pagamento}
                                     onValueChange={(value) => setFormData(prev => ({ ...prev, forma_pagamento: value }))}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="h-11">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                                        <SelectItem value="boleto">Boleto</SelectItem>
-                                        <SelectItem value="transferencia">Transferência</SelectItem>
-                                        <SelectItem value="cartao">Cartão</SelectItem>
-                                        <SelectItem value="cheque">Cheque</SelectItem>
+                                        <SelectItem value="dinheiro">💵 Dinheiro</SelectItem>
+                                        <SelectItem value="pix">🔷 PIX</SelectItem>
+                                        <SelectItem value="cartao_credito">💳 Cartão de Crédito</SelectItem>
+                                        <SelectItem value="cartao_debito">💳 Cartão de Débito</SelectItem>
+                                        <SelectItem value="boleto">📄 Boleto</SelectItem>
+                                        <SelectItem value="transferencia">🏦 Transferência</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

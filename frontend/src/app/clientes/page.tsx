@@ -33,7 +33,7 @@ export default function ClientesPage() {
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const [searchTerm, setSearchTerm] = React.useState("");
-    const [tipoFilter, setTipoFilter] = React.useState<string>("all");
+    const [activeFilter, setActiveFilter] = React.useState<string>("all"); // all, active, inactive
 
     React.useEffect(() => {
         async function fetchClientes() {
@@ -55,13 +55,21 @@ export default function ClientesPage() {
             const matchesSearch =
                 c.nome_razao_social.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 c.cpf_cnpj.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesTipo = tipoFilter === "all" || c.tipo === tipoFilter;
-            return matchesSearch && matchesTipo;
-        });
-    }, [clientes, searchTerm, tipoFilter]);
 
-    const totalActive = filtered.filter((c) => c.active).length;
-    const totalInactive = filtered.length - totalActive;
+            let matchesActive = true;
+            if (activeFilter === "active") matchesActive = c.active === true;
+            if (activeFilter === "inactive") matchesActive = c.active === false;
+
+            return matchesSearch && matchesActive;
+        });
+    }, [clientes, searchTerm, activeFilter]);
+
+    // Estatísticas baseadas em TODOS os clientes (não filtrados por busca)
+    const totalClientes = clientes.length;
+    const totalPF = clientes.filter((c) => c.tipo === "pf").length;
+    const totalPJ = clientes.filter((c) => c.tipo === "pj").length;
+    const totalActive = clientes.filter((c) => c.active).length;
+    const totalInactive = clientes.length - totalActive;
 
     if (loading) {
         return <ClientesSkeleton />;
@@ -97,17 +105,25 @@ export default function ClientesPage() {
 
             {/* Stats */}
             <div className="grid gap-4 md:grid-cols-3">
-                <Card>
+                <Card
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setActiveFilter("all")}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total de Clientes</CardTitle>
                         <User className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{filtered.length}</div>
-                        <p className="text-xs text-muted-foreground">clientes encontrados</p>
+                        <div className="text-2xl font-bold">{totalClientes}</div>
+                        <p className="text-xs text-muted-foreground">
+                            {totalPF} PF • {totalPJ} PJ
+                        </p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setActiveFilter("active")}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Ativos</CardTitle>
                         <CheckCircle className="h-4 w-4 text-green-500" />
@@ -117,7 +133,10 @@ export default function ClientesPage() {
                         <p className="text-xs text-muted-foreground">clientes ativos</p>
                     </CardContent>
                 </Card>
-                <Card>
+                <Card
+                    className="cursor-pointer hover:bg-accent/50 transition-colors"
+                    onClick={() => setActiveFilter("inactive")}
+                >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Inativos</CardTitle>
                         <XCircle className="h-4 w-4 text-red-500" />
@@ -135,25 +154,14 @@ export default function ClientesPage() {
                     <CardTitle>Filtros</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex flex-col gap-4 md:flex-row">
-                        <div className="flex-1 relative">
-                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Buscar por nome ou CPF/CNPJ..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-8"
-                            />
-                        </div>
-                        <select
-                            value={tipoFilter}
-                            onChange={(e) => setTipoFilter(e.target.value)}
-                            className="rounded border border-input bg-background px-3 py-2 text-sm"
-                        >
-                            <option value="all">Todos os tipos</option>
-                            <option value="pf">Pessoa Física</option>
-                            <option value="pj">Pessoa Jurídica</option>
-                        </select>
+                    <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Buscar por nome ou CPF/CNPJ..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-8"
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -201,10 +209,10 @@ export default function ClientesPage() {
                                 ))
                             )}
                         </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
-        </div>
+                    </Table >
+                </CardContent >
+            </Card >
+        </div >
     );
 }
 

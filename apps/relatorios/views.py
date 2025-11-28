@@ -189,18 +189,10 @@ class DashboardView(APIView):
                 }
             },
             'graficos': {
-                'vendas_ano': [
-                    {'mes': i+1, 'valor': graficos_anuais['vendas_anual'][i]}
-                    for i in range(12)
-                ],
-                'custos_ano': [
-                    {'mes': i+1, 'valor': graficos_anuais['custos_vendas_anual'][i]}
-                    for i in range(12)
-                ],
-                'os_ano': [
-                    {'mes': i+1, 'quantidade': int(graficos_anuais['os_servicos_anual'][i] + graficos_anuais['os_produtos_anual'][i])}
-                    for i in range(12)
-                ]
+                'meses': graficos_anuais['meses'],
+                'vendas': graficos_anuais['vendas_anual'],
+                'servicos': graficos_anuais['os_servicos_anual'],
+                'custos': graficos_anuais['compras_anual']
             },
             'ultimas_movimentacoes': self._format_movimentacoes(ultimas_movimentacoes)
         }
@@ -230,10 +222,9 @@ class DashboardView(APIView):
         Gera dados para gráficos anuais (12 meses)
         """
         vendas_mensal = []
-        custos_vendas_mensal = []
+        compras_mensal = []
         os_servicos_mensal = []
         os_produtos_mensal = []
-        os_custos_mensal = []
         
         for mes in range(1, 13):
             # Calcular início e fim do mês
@@ -247,13 +238,22 @@ class DashboardView(APIView):
             vendas = Venda.objects.filter(
                 data_venda__gte=inicio,
                 data_venda__lte=fim,
-                status='faturado'  # Mudado de 'finalizada' para 'faturado'
+                status='finalizada'
             ).aggregate(
                 total=Sum('valor_total')
             )
             
             vendas_mensal.append(float(vendas['total'] or 0))
-            custos_vendas_mensal.append(0)  # Venda não tem custo_total
+            
+            # Compras (Custos)
+            compras = PedidoCompra.objects.filter(
+                data_pedido__gte=inicio,
+                data_pedido__lte=fim,
+                status__in=['aprovado', 'recebido', 'concluido']
+            ).aggregate(
+                total=Sum('valor_total')
+            )
+            compras_mensal.append(float(compras['total'] or 0))
             
             # OS
             os = OrdemServico.objects.filter(
@@ -266,14 +266,12 @@ class DashboardView(APIView):
             
             os_servicos_mensal.append(float(os['servicos'] or 0))
             os_produtos_mensal.append(float(os['pecas'] or 0))
-            os_custos_mensal.append(0)  # OS não tem custo_total
         
         return {
             'vendas_anual': vendas_mensal,
-            'custos_vendas_anual': custos_vendas_mensal,
+            'compras_anual': compras_mensal,
             'os_servicos_anual': os_servicos_mensal,
             'os_produtos_anual': os_produtos_mensal,
-            'os_custos_anual': os_custos_mensal,
             'meses': ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
         }
     
@@ -282,9 +280,7 @@ class DashboardView(APIView):
         Retorna as últimas movimentações do sistema
         """
         # Últimas 10 vendas
-        ultimas_vendas = Venda.objects.select_related('cliente').filter(
-            status='finalizada'
-        ).values(
+        ultimas_vendas = Venda.objects.select_related('cliente').values(
             'id',
             'numero',
             'data_venda',
@@ -294,13 +290,15 @@ class DashboardView(APIView):
         ).order_by('-data_venda')[:10]
         
         # Últimas 10 OS
-        ultimas_os = OrdemServico.objects.select_related('cliente').values(
+        ultimas_os = OrdemServico.objects.select_related('cliente', 'tecnico').values(
             'id',
             'numero',
             'data_abertura',
             'cliente__nome_razao_social',
             'valor_total',
-            'status'
+            'status',
+            'equipamento',
+            'tecnico__first_name'
         ).order_by('-data_abertura')[:10]
         
         # Últimas 10 compras
@@ -332,17 +330,22 @@ class DashboardView(APIView):
                 'tipo': 'venda',
                 'descricao': f"Venda {venda['numero']} - {venda['cliente__nome_razao_social']}",
                 'valor': float(venda['valor_total']),
-                'data': venda['data_venda'].isoformat() if hasattr(venda['data_venda'], 'isoformat') else str(venda['data_venda'])
+                'data': venda['data_venda'].isoformat() if hasattr(venda['data_venda'], 'isoformat') else str(venda['data_venda']),
+                'status': venda['status'],
+                'detalhes': 'Ver detalhes'
             })
         
         # Formatar OS
         for os in movimentacoes['os']:
+            tecnico = venda.get('tecnico__first_name', '')
             resultado.append({
                 'id': os['id'],
                 'tipo': 'os',
                 'descricao': f"OS {os['numero']} - {os['cliente__nome_razao_social']}",
                 'valor': float(os['valor_total']),
-                'data': os['data_abertura'].isoformat() if hasattr(os['data_abertura'], 'isoformat') else str(os['data_abertura'])
+                'data': os['data_abertura'].isoformat() if hasattr(os['data_abertura'], 'isoformat') else str(os['data_abertura']),
+                'status': os['status'],
+                'detalhes': f"{os.get('equipamento', 'N/A')} | Téc: {tecnico or 'N/A'}"
             })
         
         # Formatar compras
@@ -352,7 +355,9 @@ class DashboardView(APIView):
                 'tipo': 'compra',
                 'descricao': f"Compra {compra['numero']} - {compra['fornecedor__razao_social']}",
                 'valor': float(compra['valor_total']),
-                'data': compra['data_pedido'].isoformat() if hasattr(compra['data_pedido'], 'isoformat') else str(compra['data_pedido'])
+                'data': compra['data_pedido'].isoformat() if hasattr(compra['data_pedido'], 'isoformat') else str(compra['data_pedido']),
+                'status': compra['status'],
+                'detalhes': 'Ver detalhes'
             })
         
         # Ordenar por data (mais recente primeiro) e pegar apenas as 10 primeiras

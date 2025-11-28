@@ -10,11 +10,19 @@ import {
     Settings,
     Users,
     Building2,
-    History
+    History,
+    LayoutDashboard,
 } from "lucide-react";
 
 export default function ConfiguracoesPage() {
     const menus = [
+        {
+            title: "Dashboard",
+            description: "Configure widgets e métricas do painel principal",
+            icon: LayoutDashboard,
+            href: "/configuracoes/dashboard",
+            color: "text-blue-500",
+        },
         {
             title: "Gestão de Usuários",
             description: "Controlar permissões e acessos dos funcionários",
@@ -35,6 +43,13 @@ export default function ConfiguracoesPage() {
             icon: History,
             href: "/configuracoes/logs",
             color: "text-amber-500",
+        },
+        {
+            title: "Menu Lateral",
+            description: "Personalize a ordem do menu lateral",
+            icon: Settings,
+            href: "/configuracoes/menu",
+            color: "text-purple-500",
         },
     ];
 

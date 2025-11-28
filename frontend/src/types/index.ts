@@ -36,17 +36,20 @@ export interface DashboardKPIs {
 }
 
 export interface DashboardGraficos {
-    vendas_ano: Array<{ mes: number; valor: number }>;
-    custos_ano: Array<{ mes: number; valor: number }>;
-    os_ano: Array<{ mes: number; quantidade: number }>;
+    meses: string[];
+    vendas: number[];
+    servicos: number[];
+    custos: number[];
 }
 
 export interface DashboardMovimentacao {
     id: number;
-    tipo: 'venda' | 'os' | 'pagamento' | 'recebimento';
+    tipo: 'venda' | 'os' | 'pagamento' | 'recebimento' | 'compra';
     descricao: string;
     valor: number;
     data: string;
+    status?: string;
+    detalhes?: string;
 }
 
 export interface Dashboard {

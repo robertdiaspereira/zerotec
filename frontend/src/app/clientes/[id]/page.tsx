@@ -158,9 +158,17 @@ export default function ClienteDetailsPage() {
                         <ArrowLeft className="h-4 w-4" />
                     </Button>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
-                            {cliente.nome_razao_social}
-                        </h1>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-3xl font-bold tracking-tight">
+                                {cliente.nome_razao_social}
+                            </h1>
+                            <Badge variant="outline">
+                                {cliente.tipo === "pf" ? "PF" : "PJ"}
+                            </Badge>
+                            <Badge className={cliente.active ? "bg-green-500" : "bg-gray-500"}>
+                                {cliente.active ? "Ativo" : "Inativo"}
+                            </Badge>
+                        </div>
                         <p className="text-muted-foreground">
                             Detalhes do cliente
                         </p>
@@ -176,7 +184,7 @@ export default function ClienteDetailsPage() {
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total em Vendas</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total em Compras</CardTitle>
                         <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
@@ -229,133 +237,104 @@ export default function ClienteDetailsPage() {
                 </Card>
             </div>
 
-            <div className="grid gap-6 md:grid-cols-3">
-                {/* Informações do Cliente */}
-                <Card className="md:col-span-2">
-                    <CardHeader>
-                        <CardTitle>Informações do Cliente</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">
-                                    Tipo
-                                </p>
-                                <Badge variant="outline" className="mt-1">
-                                    {cliente.tipo === "pf" ? "Pessoa Física" : "Pessoa Jurídica"}
-                                </Badge>
-                            </div>
-                            <div>
-                                <p className="text-sm font-medium text-muted-foreground">
-                                    {cliente.tipo === "pf" ? "CPF" : "CNPJ"}
-                                </p>
-                                <p className="font-mono">{cliente.cpf_cnpj}</p>
-                            </div>
-                            {cliente.nome_fantasia && (
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        Nome Fantasia
-                                    </p>
-                                    <p>{cliente.nome_fantasia}</p>
-                                </div>
-                            )}
-                            {cliente.rg_ie && (
-                                <div>
-                                    <p className="text-sm font-medium text-muted-foreground">
-                                        {cliente.tipo === "pf" ? "RG" : "IE"}
-                                    </p>
-                                    <p>{cliente.rg_ie}</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <Separator />
-
+            {/* Informações do Cliente */}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Informações do Cliente</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2">
                         <div>
-                            <h4 className="mb-3 font-semibold">Contato</h4>
-                            <div className="space-y-2">
-                                {cliente.telefone_principal && (
-                                    <div className="flex items-center gap-2">
-                                        <Phone className="h-4 w-4 text-muted-foreground" />
-                                        <span>{cliente.telefone_principal}</span>
-                                    </div>
-                                )}
-                                {cliente.telefone_secundario && (
-                                    <div className="flex items-center gap-2">
-                                        <Phone className="h-4 w-4 text-muted-foreground" />
-                                        <span>{cliente.telefone_secundario}</span>
-                                    </div>
-                                )}
-                                {cliente.email && (
-                                    <div className="flex items-center gap-2">
-                                        <Mail className="h-4 w-4 text-muted-foreground" />
-                                        <span>{cliente.email}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {(cliente.logradouro || cliente.cidade) && (
-                            <>
-                                <Separator />
-                                <div>
-                                    <h4 className="mb-3 font-semibold">Endereço</h4>
-                                    <div className="flex items-start gap-2">
-                                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
-                                        <div className="text-sm">
-                                            {cliente.logradouro && (
-                                                <p>
-                                                    {cliente.logradouro}
-                                                    {cliente.numero && `, ${cliente.numero}`}
-                                                    {cliente.complemento && ` - ${cliente.complemento}`}
-                                                </p>
-                                            )}
-                                            {cliente.bairro && <p>{cliente.bairro}</p>}
-                                            {cliente.cidade && cliente.estado && (
-                                                <p>
-                                                    {cliente.cidade}/{cliente.estado}
-                                                </p>
-                                            )}
-                                            {cliente.cep && <p>CEP: {cliente.cep}</p>}
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {cliente.observacoes && (
-                            <>
-                                <Separator />
-                                <div>
-                                    <h4 className="mb-2 font-semibold">Observações</h4>
-                                    <p className="text-sm text-muted-foreground">
-                                        {cliente.observacoes}
-                                    </p>
-                                </div>
-                            </>
-                        )}
-                    </CardContent>
-                </Card>
-
-                {/* Status */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Status</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <p className="text-sm font-medium text-muted-foreground mb-2">
-                                Situação
+                            <p className="text-sm font-medium text-muted-foreground">
+                                {cliente.tipo === "pf" ? "CPF" : "CNPJ"}
                             </p>
-                            <Badge
-                                className={cliente.active ? "bg-green-500" : "bg-gray-500"}
-                            >
-                                {cliente.active ? "Ativo" : "Inativo"}
-                            </Badge>
+                            <p className="font-mono">{cliente.cpf_cnpj}</p>
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                        {cliente.nome_fantasia && (
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">
+                                    Nome Fantasia
+                                </p>
+                                <p>{cliente.nome_fantasia}</p>
+                            </div>
+                        )}
+                        {cliente.rg_ie && (
+                            <div>
+                                <p className="text-sm font-medium text-muted-foreground">
+                                    {cliente.tipo === "pf" ? "RG" : "IE"}
+                                </p>
+                                <p>{cliente.rg_ie}</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <Separator />
+
+                    <div>
+                        <h4 className="mb-3 font-semibold">Contato</h4>
+                        <div className="space-y-2">
+                            {cliente.telefone_principal && (
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-muted-foreground" />
+                                    <span>{cliente.telefone_principal}</span>
+                                </div>
+                            )}
+                            {cliente.telefone_secundario && (
+                                <div className="flex items-center gap-2">
+                                    <Phone className="h-4 w-4 text-muted-foreground" />
+                                    <span>{cliente.telefone_secundario}</span>
+                                </div>
+                            )}
+                            {cliente.email && (
+                                <div className="flex items-center gap-2">
+                                    <Mail className="h-4 w-4 text-muted-foreground" />
+                                    <span>{cliente.email}</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {(cliente.logradouro || cliente.cidade) && (
+                        <>
+                            <Separator />
+                            <div>
+                                <h4 className="mb-3 font-semibold">Endereço</h4>
+                                <div className="flex items-start gap-2">
+                                    <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                                    <div className="text-sm">
+                                        {cliente.logradouro && (
+                                            <p>
+                                                {cliente.logradouro}
+                                                {cliente.numero && `, ${cliente.numero}`}
+                                                {cliente.complemento && ` - ${cliente.complemento}`}
+                                            </p>
+                                        )}
+                                        {cliente.bairro && <p>{cliente.bairro}</p>}
+                                        {cliente.cidade && cliente.estado && (
+                                            <p>
+                                                {cliente.cidade}/{cliente.estado}
+                                            </p>
+                                        )}
+                                        {cliente.cep && <p>CEP: {cliente.cep}</p>}
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+
+                    {cliente.observacoes && (
+                        <>
+                            <Separator />
+                            <div>
+                                <h4 className="mb-2 font-semibold">Observações</h4>
+                                <p className="text-sm text-muted-foreground">
+                                    {cliente.observacoes}
+                                </p>
+                            </div>
+                        </>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* Histórico */}
             <Card>

@@ -1,11 +1,8 @@
-/**
- * Vendas Page
- * Listagem de vendas com filtros e paginação
- */
-
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
@@ -26,7 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Download, Eye, Plus, MoreVertical, Edit, Copy, FileText, Trash } from "lucide-react";
+import { Search, Download, Eye, Plus, MoreVertical, Edit, Copy, FileText, Trash } from "lucide-react";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -35,15 +32,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import api from "@/lib/api";
-import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Venda {
     id: number;
     numero: string;
-    cliente: {
-        id: number;
-        nome_razao_social: string;
-    };
+    cliente_nome: string;
     data_venda: string;
     status: string;
     valor_total: number;
@@ -67,39 +61,45 @@ const statusLabels: Record<string, string> = {
 };
 
 export default function VendasPage() {
+    const router = useRouter();
+    const { isAuthenticated, loading: authLoading } = useAuth();
+
     const [vendas, setVendas] = React.useState<Venda[]>([]);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
     const [searchTerm, setSearchTerm] = React.useState("");
     const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
+    // Redirect unauthenticated users
     React.useEffect(() => {
+        if (!authLoading && !isAuthenticated) {
+            router.push("/login");
+        }
+    }, [authLoading, isAuthenticated, router]);
+
+    // Fetch vendas when authenticated
+    React.useEffect(() => {
+        if (authLoading || !isAuthenticated) return;
         async function fetchVendas() {
             try {
                 setLoading(true);
-                const response = await api.getVendas() as any;
+                const response = await api.getVendas();
                 setVendas(response.results || response);
             } catch (err) {
-                setError(
-                    err instanceof Error ? err.message : "Erro ao carregar vendas"
-                );
+                setError(err instanceof Error ? err.message : "Erro ao carregar vendas");
             } finally {
                 setLoading(false);
             }
         }
-
         fetchVendas();
-    }, []);
+    }, [authLoading, isAuthenticated]);
 
     const filteredVendas = React.useMemo(() => {
         return vendas.filter((venda) => {
             const matchesSearch =
                 venda.numero.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                venda.cliente?.nome_razao_social?.toLowerCase().includes(searchTerm.toLowerCase());
-
-            const matchesStatus =
-                statusFilter === "all" || venda.status === statusFilter;
-
+                venda.cliente_nome?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesStatus = statusFilter === "all" || venda.status === statusFilter;
             return matchesSearch && matchesStatus;
         });
     }, [vendas, searchTerm, statusFilter]);
@@ -115,9 +115,7 @@ export default function VendasPage() {
         return (
             <div className="flex h-[400px] items-center justify-center">
                 <div className="text-center">
-                    <p className="text-lg font-semibold text-destructive">
-                        Erro ao carregar vendas
-                    </p>
+                    <p className="text-lg font-semibold text-destructive">Erro ao carregar vendas</p>
                     <p className="text-sm text-muted-foreground">{error}</p>
                 </div>
             </div>
@@ -130,9 +128,7 @@ export default function VendasPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Vendas</h1>
-                    <p className="text-muted-foreground">
-                        Gerencie todas as vendas do sistema
-                    </p>
+                    <p className="text-muted-foreground">Gerencie todas as vendas do sistema</p>
                 </div>
                 <Link href="/vendas/nova">
                     <Button>
@@ -150,43 +146,29 @@ export default function VendasPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{filteredVendas.length}</div>
-                        <p className="text-xs text-muted-foreground">
-                            vendas encontradas
-                        </p>
+                        <p className="text-xs text-muted-foreground">vendas encontradas</p>
                     </CardContent>
                 </Card>
-
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Valor Total</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            }).format(totalVendas)}
+                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalVendas)}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            em vendas filtradas
-                        </p>
+                        <p className="text-xs text-muted-foreground">em vendas filtradas</p>
                     </CardContent>
                 </Card>
-
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Descontos</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            {new Intl.NumberFormat("pt-BR", {
-                                style: "currency",
-                                currency: "BRL",
-                            }).format(totalDescontos)}
+                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(totalDescontos)}
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                            em descontos concedidos
-                        </p>
+                        <p className="text-xs text-muted-foreground">em descontos concedidos</p>
                     </CardContent>
                 </Card>
             </div>
@@ -259,30 +241,18 @@ export default function VendasPage() {
                                 filteredVendas.map((venda) => (
                                     <TableRow key={venda.id}>
                                         <TableCell className="font-medium">{venda.numero}</TableCell>
+                                        <TableCell>{venda.cliente_nome || "Sem cliente"}</TableCell>
+                                        <TableCell>{new Date(venda.data_venda).toLocaleDateString("pt-BR")}</TableCell>
                                         <TableCell>
-                                            {venda.cliente?.nome_razao_social || "Sem cliente"}
-                                        </TableCell>
-                                        <TableCell>
-                                            {new Date(venda.data_venda).toLocaleDateString("pt-BR")}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge
-                                                className={statusColors[venda.status] || "bg-gray-500"}
-                                            >
+                                            <Badge className={statusColors[venda.status] || "bg-gray-500"}>
                                                 {statusLabels[venda.status] || venda.status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell className="text-right">
-                                            {new Intl.NumberFormat("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                            }).format(Number(venda.valor_desconto) || 0)}
+                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(venda.valor_desconto) || 0)}
                                         </TableCell>
                                         <TableCell className="text-right font-medium">
-                                            {new Intl.NumberFormat("pt-BR", {
-                                                style: "currency",
-                                                currency: "BRL",
-                                            }).format(venda.valor_total)}
+                                            {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(venda.valor_total)}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>

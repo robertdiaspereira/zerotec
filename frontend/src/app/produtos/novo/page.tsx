@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import api from "@/lib/api";
+import { DynamicSelect } from "@/components/common/DynamicSelect";
 
 interface Categoria {
     id: number;
@@ -61,6 +62,17 @@ export default function NovoProdutoPage() {
 
     const handleSelectChange = (name: string, value: string) => {
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleCreateCategoria = async (nome: string) => {
+        try {
+            const novaCategoria: any = await api.createCategoria({ nome, tipo: 'produto' });
+            setCategorias([...categorias, novaCategoria]);
+            return novaCategoria;
+        } catch (error) {
+            console.error("Erro ao criar categoria:", error);
+            throw error;
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -139,21 +151,14 @@ export default function NovoProdutoPage() {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="categoria">Categoria</Label>
-                                <Select
+                                <DynamicSelect
                                     value={formData.categoria}
-                                    onValueChange={(value) => handleSelectChange("categoria", value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Selecione uma categoria" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {categorias.map((cat) => (
-                                            <SelectItem key={cat.id} value={cat.id.toString()}>
-                                                {cat.nome}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                    onChange={(value) => handleSelectChange("categoria", value)}
+                                    options={categorias.map(c => ({ id: c.id, label: c.nome }))}
+                                    placeholder="Selecione uma categoria"
+                                    label="Categoria"
+                                    onCreate={handleCreateCategoria}
+                                />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="unidade_medida">Unidade de Medida</Label>

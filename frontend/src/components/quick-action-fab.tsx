@@ -39,14 +39,12 @@ export function QuickActionFab() {
                     <DropdownMenuTrigger asChild>
                         <Button
                             size="icon"
-                            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 bg-primary hover:bg-primary/90"
+                            className="h-14 w-14 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-primary/60 hover:bg-primary opacity-70 hover:opacity-100"
                         >
                             <Plus className="h-6 w-6" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 mb-2">
-
-
                         <DropdownMenuItem onClick={() => router.push("/os/nova")}>
                             <Wrench className="mr-2 h-4 w-4" />
                             <span>Nova OS</span>
@@ -57,7 +55,7 @@ export function QuickActionFab() {
                             <span>Nova Venda</span>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => router.push("/vendas/nova")}>
+                        <DropdownMenuItem onClick={() => router.push("/pdv")}>
                             <ShoppingCart className="mr-2 h-4 w-4" />
                             <span>Nova Venda PDV</span>
                         </DropdownMenuItem>
@@ -79,11 +77,6 @@ export function QuickActionFab() {
                             <span>Novo Produto</span>
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem onClick={() => router.push("/estoque/movimentacoes/nova")}>
-                            <ArrowLeftRight className="mr-2 h-4 w-4" />
-                            <span>Ajuste de Estoque</span>
-                        </DropdownMenuItem>
-
                         <DropdownMenuItem onClick={() => router.push("/compras/novo")}>
                             <Truck className="mr-2 h-4 w-4" />
                             <span>Nova Compra</span>
@@ -91,14 +84,9 @@ export function QuickActionFab() {
 
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem onClick={() => setServiceModalOpen(true)}>
-                            <FileText className="mr-2 h-4 w-4" />
-                            <span>Novo Serviço</span>
-                        </DropdownMenuItem>
-
-                        <DropdownMenuItem onClick={() => router.push("/financeiro/fluxo-caixa")}>
+                        <DropdownMenuItem onClick={() => router.push("/financeiro/caixa/lancamento")}>
                             <DollarSign className="mr-2 h-4 w-4" />
-                            <span>Fluxo de Caixa</span>
+                            <span>Lançamento Caixa</span>
                         </DropdownMenuItem>
 
                         <DropdownMenuItem disabled>

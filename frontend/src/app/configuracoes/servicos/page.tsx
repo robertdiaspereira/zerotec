@@ -45,7 +45,6 @@ interface Servico {
     descricao_detalhada: string;
     valor_padrao: string;
     tempo_estimado: number;
-    categoria: string;
     ativo: boolean;
 }
 
@@ -60,7 +59,6 @@ export default function ServicosPage() {
         descricao_detalhada: "",
         valor_padrao: "",
         tempo_estimado: "",
-        categoria: "",
     });
 
     const fetchServicos = async () => {
@@ -122,7 +120,6 @@ export default function ServicosPage() {
             descricao_detalhada: servico.descricao_detalhada,
             valor_padrao: servico.valor_padrao,
             tempo_estimado: servico.tempo_estimado?.toString() || "",
-            categoria: servico.categoria,
         });
         setShowModal(true);
     };
@@ -154,7 +151,6 @@ export default function ServicosPage() {
             descricao_detalhada: "",
             valor_padrao: "",
             tempo_estimado: "",
-            categoria: "",
         });
     };
 
@@ -186,7 +182,6 @@ export default function ServicosPage() {
                             <TableRow>
                                 <TableHead>Código</TableHead>
                                 <TableHead>Descrição</TableHead>
-                                <TableHead>Categoria</TableHead>
                                 <TableHead className="text-right">Valor Padrão</TableHead>
                                 <TableHead>Tempo Est.</TableHead>
                                 <TableHead className="text-right">Ações</TableHead>
@@ -202,7 +197,6 @@ export default function ServicosPage() {
                                             {servico.descricao_detalhada}
                                         </div>
                                     </TableCell>
-                                    <TableCell>{servico.categoria}</TableCell>
                                     <TableCell className="text-right">
                                         {new Intl.NumberFormat("pt-BR", {
                                             style: "currency",
@@ -232,7 +226,7 @@ export default function ServicosPage() {
                             ))}
                             {servicos.length === 0 && !loading && (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                         Nenhum serviço cadastrado
                                     </TableCell>
                                 </TableRow>
@@ -275,25 +269,7 @@ export default function ServicosPage() {
                                 placeholder="Ex: Formatação"
                             />
                         </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="categoria" className="text-right">
-                                Categoria
-                            </Label>
-                            <Select
-                                value={formData.categoria}
-                                onValueChange={(value) => setFormData({ ...formData, categoria: value })}
-                            >
-                                <SelectTrigger className="col-span-3">
-                                    <SelectValue placeholder="Selecione" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="manutencao">Manutenção</SelectItem>
-                                    <SelectItem value="reparo">Reparo</SelectItem>
-                                    <SelectItem value="instalacao">Instalação</SelectItem>
-                                    <SelectItem value="configuracao">Configuração</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="valor" className="text-right">
                                 Valor (R$)

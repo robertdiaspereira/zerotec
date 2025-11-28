@@ -3,7 +3,7 @@ Multi-tenancy and User models
 """
 
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django_tenants.models import TenantMixin, DomainMixin
 from apps.core.models import TimeStampedModel
 
@@ -87,3 +87,20 @@ class User(AbstractUser):
     def is_tenant_admin(self):
         """Check if user is admin of their tenant"""
         return self.is_staff or self.is_superadmin
+
+
+class GroupProfile(models.Model):
+    """
+    Extensão do modelo Group para incluir permissões customizadas
+    """
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, related_name='profile')
+    
+    # Permissões específicas do sistema (mesmas do User)
+    can_manage_os = models.BooleanField('Gerenciar OS', default=False)
+    can_manage_vendas = models.BooleanField('Gerenciar Vendas', default=False)
+    can_manage_compras = models.BooleanField('Gerenciar Compras', default=False)
+    can_manage_financeiro = models.BooleanField('Gerenciar Financeiro', default=False)
+    can_view_relatorios = models.BooleanField('Ver Relatórios', default=False)
+    
+    def __str__(self):
+        return f'Profile for {self.group.name}'
