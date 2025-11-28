@@ -59,6 +59,8 @@ export default function NovaCompraPage() {
         data_entrega_prevista: "",
         valor_frete: "0",
         valor_desconto: "0",
+        desconto_percentual: "0",
+        tipo_desconto: "valor" as "valor" | "percentual",
         forma_pagamento: "boleto",
         condicao_pagamento: "",
         observacoes: "",
@@ -144,7 +146,15 @@ export default function NovaCompraPage() {
     const calcularTotais = () => {
         const totalProdutos = itens.reduce((sum, item) => sum + item.subtotal, 0);
         const frete = parseFloat(formData.valor_frete) || 0;
-        const desconto = parseFloat(formData.valor_desconto) || 0;
+
+        let desconto = 0;
+        if (formData.tipo_desconto === "percentual") {
+            const percentual = parseFloat(formData.desconto_percentual) || 0;
+            desconto = (totalProdutos * percentual) / 100;
+        } else {
+            desconto = parseFloat(formData.valor_desconto) || 0;
+        }
+
         const total = totalProdutos + frete - desconto;
 
         return { totalProdutos, frete, desconto, total };
@@ -432,16 +442,55 @@ export default function NovaCompraPage() {
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="desconto" className="text-sm">Desconto</Label>
-                                    <Input
-                                        id="desconto"
-                                        type="number"
-                                        min="0"
-                                        step="0.01"
-                                        value={formData.valor_desconto}
-                                        onChange={(e) => setFormData(prev => ({ ...prev, valor_desconto: e.target.value }))}
-                                    />
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <Label htmlFor="desconto" className="text-sm">Desconto</Label>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant={formData.tipo_desconto === "valor" ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setFormData(prev => ({ ...prev, tipo_desconto: "valor" }))}
+                                            >
+                                                R$
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant={formData.tipo_desconto === "percentual" ? "default" : "outline"}
+                                                size="sm"
+                                                onClick={() => setFormData(prev => ({ ...prev, tipo_desconto: "percentual" }))}
+                                            >
+                                                %
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    {formData.tipo_desconto === "valor" ? (
+                                        <Input
+                                            id="desconto"
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            placeholder="0,00"
+                                            value={formData.valor_desconto}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, valor_desconto: e.target.value }))}
+                                        />
+                                    ) : (
+                                        <div className="space-y-1">
+                                            <Input
+                                                id="desconto_percentual"
+                                                type="number"
+                                                min="0"
+                                                max="100"
+                                                step="0.1"
+                                                placeholder="0"
+                                                value={formData.desconto_percentual}
+                                                onChange={(e) => setFormData(prev => ({ ...prev, desconto_percentual: e.target.value }))}
+                                            />
+                                            <p className="text-xs text-muted-foreground">
+                                                Desconto: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(desconto)}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="pt-4 border-t-2">
